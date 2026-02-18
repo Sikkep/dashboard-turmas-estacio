@@ -7,6 +7,7 @@ import { AlertCircle, Loader2, GraduationCap, Calendar, RefreshCw } from "lucide
 import VisaoGeral from "@/components/VisaoGeral";
 import VisaoMeta from "@/components/VisaoMeta";
 import TurmasProximas from "@/components/TurmasProximas";
+import GapEnturmacao from "@/components/GapEnturmacao";
 import UploadForm from "@/components/UploadForm";
 import FilterBar from "@/components/FilterBar";
 
@@ -347,6 +348,12 @@ export default function Dashboard() {
               >
                 Próximas de Confirmar
               </TabsTrigger>
+              <TabsTrigger
+                value="gap-enturmacao"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
+              >
+                Gap de Enturmação
+              </TabsTrigger>
               {!isProduction && (
                 <TabsTrigger
                   value="upload"
@@ -368,6 +375,10 @@ export default function Dashboard() {
 
           <TabsContent value="turmas-proximas" className="mt-0">
             <TurmasProximas turmas={displayData.turmas} />
+          </TabsContent>
+
+          <TabsContent value="gap-enturmacao" className="mt-0">
+            <GapEnturmacao turmas={displayData.turmas} />
           </TabsContent>
 
           {!isProduction && (
