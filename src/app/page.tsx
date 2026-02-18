@@ -6,8 +6,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2, GraduationCap, Calendar, RefreshCw } from "lucide-react";
 import VisaoGeral from "@/components/VisaoGeral";
 import VisaoMeta from "@/components/VisaoMeta";
-import TurmasTable from "@/components/TurmasTable";
-import CampusTable from "@/components/CampusTable";
 import UploadForm from "@/components/UploadForm";
 import FilterBar from "@/components/FilterBar";
 
@@ -330,33 +328,21 @@ export default function Dashboard() {
         <Tabs defaultValue="visao-geral" className="space-y-4">
           <div className="bg-white rounded-2xl p-1.5 shadow-sm border inline-flex">
             <TabsList className="bg-transparent gap-1">
-              <TabsTrigger 
-                value="visao-geral" 
+              <TabsTrigger
+                value="visao-geral"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
               >
                 Visão Geral
               </TabsTrigger>
-              <TabsTrigger 
-                value="visao-meta" 
+              <TabsTrigger
+                value="visao-meta"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
               >
                 Atingimento de Meta
               </TabsTrigger>
-              <TabsTrigger 
-                value="campus" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
-              >
-                Por Campus
-              </TabsTrigger>
-              <TabsTrigger 
-                value="turmas" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
-              >
-                Por Turma
-              </TabsTrigger>
               {!isProduction && (
-                <TabsTrigger 
-                  value="upload" 
+                <TabsTrigger
+                  value="upload"
                   className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
                 >
                   Upload
@@ -371,14 +357,6 @@ export default function Dashboard() {
 
           <TabsContent value="visao-meta" className="mt-0">
             <VisaoMeta totais={displayData.totais} campusData={displayData.campusData} />
-          </TabsContent>
-
-          <TabsContent value="campus" className="mt-0">
-            <CampusTable campusData={displayData.campusData} />
-          </TabsContent>
-
-          <TabsContent value="turmas" className="mt-0">
-            <TurmasTable turmas={displayData.turmas} />
           </TabsContent>
 
           {!isProduction && (

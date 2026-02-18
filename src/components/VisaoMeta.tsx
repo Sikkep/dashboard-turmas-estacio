@@ -1,7 +1,18 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, GraduationCap, FileText, BookOpen, TrendingUp, TrendingDown, Target, Award, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Users, GraduationCap, FileText, BookOpen, TrendingUp, Target, Award, AlertTriangle, CheckCircle, XCircle, Search, Building2 } from "lucide-react";
 
 interface TotaisData {
   inscritosAtual: number;
@@ -23,9 +34,20 @@ interface CampusData {
   nomeCampus: string;
   totalTurmas: number;
   turmasComDados: number;
+  inscritosAtual: number;
+  inscritosMeta: number;
+  inscritosPercent: number;
+  matFinAtual: number;
+  matFinMeta: number;
+  matFinPercent: number;
+  finDocAtual: number;
+  finDocMeta: number;
+  finDocPercent: number;
   matAcadAtual: number;
   matAcadMeta: number;
   matAcadPercent: number;
+  turmasConfirmadas: number;
+  turmasNaoConfirmadas: number;
 }
 
 interface VisaoMetaProps {
@@ -60,6 +82,20 @@ function getTextColor(percent: number): string {
   return "text-red-600";
 }
 
+function PercentBadge({ percent }: { percent: number }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span className={`text-sm font-bold ${getTextColor(percent)}`}>{percent}%</span>
+      <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${getProgressBg(percent).replace('bg-', 'bg-').replace('-100', '-500')}`}
+          style={{ width: `${Math.min(percent, 100)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 interface MetaCardProps {
   title: string;
   atual: number;
@@ -72,7 +108,7 @@ interface MetaCardProps {
 
 function MetaCard({ title, atual, meta, percent, icon, gradient, iconBg }: MetaCardProps) {
   const progressWidth = Math.min(percent, 100);
-  
+
   return (
     <Card className="relative overflow-hidden border-0 shadow-lg bg-white">
       <CardContent className="p-6">
@@ -85,23 +121,23 @@ function MetaCard({ title, atual, meta, percent, icon, gradient, iconBg }: MetaC
             <p className={`text-2xl font-bold ${getTextColor(percent)}`}>{percent}%</p>
           </div>
         </div>
-        
+
         <div className="mb-3">
           <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">{title}</p>
         </div>
-        
+
         <div className="flex items-end gap-2 mb-4">
           <span className="text-3xl font-bold text-gray-800">{formatNumber(atual)}</span>
           <span className="text-sm text-gray-500 mb-1">/ {formatNumber(meta)}</span>
         </div>
-        
+
         <div className={`h-3 rounded-full overflow-hidden ${getProgressBg(percent)}`}>
-          <div 
+          <div
             className={`h-full rounded-full bg-gradient-to-r ${getProgressGradient(percent)} transition-all duration-500`}
             style={{ width: `${progressWidth}%` }}
           />
         </div>
-        
+
         <div className="absolute top-0 right-0 w-32 h-32 opacity-5">
           <div className={`w-full h-full rounded-full bg-gradient-to-br ${gradient}`} />
         </div>
@@ -111,9 +147,19 @@ function MetaCard({ title, atual, meta, percent, icon, gradient, iconBg }: MetaC
 }
 
 export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
+  const [search, setSearch] = useState("");
+
   // Sort campus by mat_acad percent (descending)
   const sortedCampus = [...campusData].sort((a, b) => b.matAcadPercent - a.matAcadPercent);
-  
+
+  // Filter campus by search
+  const filteredCampus = useMemo(() => {
+    const searchLower = search.toLowerCase();
+    return sortedCampus.filter((campus) =>
+      campus.nomeCampus.toLowerCase().includes(searchLower)
+    );
+  }, [sortedCampus, search]);
+
   // Top 5 and bottom 5 campus
   const topCampus = sortedCampus.slice(0, 5);
   const bottomCampus = sortedCampus.filter(c => c.matAcadMeta > 0).slice(-5).reverse();
@@ -123,6 +169,42 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
   const matFinGap = totais.matFinMeta - totais.matFinAtual;
   const finDocGap = totais.finDocMeta - totais.finDocAtual;
   const matAcadGap = totais.matAcadMeta - totais.matAcadAtual;
+
+  // Calculate totals for filtered campus
+  const filteredTotals = useMemo(() => {
+    return filteredCampus.reduce((acc, campus) => ({
+      totalTurmas: acc.totalTurmas + campus.totalTurmas,
+      turmasConfirmadas: acc.turmasConfirmadas + campus.turmasConfirmadas,
+      turmasNaoConfirmadas: acc.turmasNaoConfirmadas + campus.turmasNaoConfirmadas,
+      inscritosAtual: acc.inscritosAtual + campus.inscritosAtual,
+      inscritosMeta: acc.inscritosMeta + campus.inscritosMeta,
+      matFinAtual: acc.matFinAtual + campus.matFinAtual,
+      matFinMeta: acc.matFinMeta + campus.matFinMeta,
+      finDocAtual: acc.finDocAtual + campus.finDocAtual,
+      finDocMeta: acc.finDocMeta + campus.finDocMeta,
+      matAcadAtual: acc.matAcadAtual + campus.matAcadAtual,
+      matAcadMeta: acc.matAcadMeta + campus.matAcadMeta,
+    }), {
+      totalTurmas: 0,
+      turmasConfirmadas: 0,
+      turmasNaoConfirmadas: 0,
+      inscritosAtual: 0,
+      inscritosMeta: 0,
+      matFinAtual: 0,
+      matFinMeta: 0,
+      finDocAtual: 0,
+      finDocMeta: 0,
+      matAcadAtual: 0,
+      matAcadMeta: 0,
+    });
+  }, [filteredCampus]);
+
+  const filteredTotalsPercent = {
+    inscritos: filteredTotals.inscritosMeta > 0 ? Math.round((filteredTotals.inscritosAtual / filteredTotals.inscritosMeta) * 100) : 0,
+    matFin: filteredTotals.matFinMeta > 0 ? Math.round((filteredTotals.matFinAtual / filteredTotals.matFinMeta) * 100) : 0,
+    finDoc: filteredTotals.finDocMeta > 0 ? Math.round((filteredTotals.finDocAtual / filteredTotals.finDocMeta) * 100) : 0,
+    matAcad: filteredTotals.matAcadMeta > 0 ? Math.round((filteredTotals.matAcadAtual / filteredTotals.matAcadMeta) * 100) : 0,
+  };
 
   return (
     <div className="space-y-6">
@@ -134,7 +216,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
         </div>
       </div>
 
-      {/* Cards de Meta - Coloridos com Progress */}
+      {/* Cards de Meta */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetaCard
           title="INSCRITOS"
@@ -146,7 +228,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
           iconBg="bg-blue-100"
         />
         <MetaCard
-          title="MATRÍCULAS FINALIZADAS"
+          title="MAT FIN"
           atual={totais.matFinAtual}
           meta={totais.matFinMeta}
           percent={totais.matFinPercent}
@@ -164,7 +246,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
           iconBg="bg-orange-100"
         />
         <MetaCard
-          title="MATRÍCULAS ACADÊMICAS"
+          title="MAT ACAD"
           atual={totais.matAcadAtual}
           meta={totais.matAcadMeta}
           percent={totais.matAcadPercent}
@@ -189,19 +271,19 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
               </p>
             </div>
             <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-              <p className="text-sm text-gray-500 mb-1">Mat. Finalizadas</p>
+              <p className="text-sm text-gray-500 mb-1">Mat Fin</p>
               <p className={`text-xl font-bold ${matFinGap > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                 {matFinGap > 0 ? '-' : '+'}{formatNumber(Math.abs(matFinGap))}
               </p>
             </div>
             <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-              <p className="text-sm text-gray-500 mb-1">Fin. Documentado</p>
+              <p className="text-sm text-gray-500 mb-1">Fin Doc</p>
               <p className={`text-xl font-bold ${finDocGap > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                 {finDocGap > 0 ? '-' : '+'}{formatNumber(Math.abs(finDocGap))}
               </p>
             </div>
             <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-              <p className="text-sm text-gray-500 mb-1">Mat. Acadêmicas</p>
+              <p className="text-sm text-gray-500 mb-1">Mat Acad</p>
               <p className={`text-xl font-bold ${matAcadGap > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                 {matAcadGap > 0 ? '-' : '+'}{formatNumber(Math.abs(matAcadGap))}
               </p>
@@ -210,51 +292,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
         </CardContent>
       </Card>
 
-      {/* Comparativo Visual */}
-      <Card className="border-0 shadow-md bg-white">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Award className="h-5 w-5 text-gray-600" />
-            <h3 className="text-lg font-bold text-gray-800">Comparativo Realizado vs Meta</h3>
-          </div>
-          <div className="space-y-5">
-            {[
-              { label: "Inscritos", atual: totais.inscritosAtual, meta: totais.inscritosMeta, percent: totais.inscritosPercent, color: "blue" },
-              { label: "Mat Fin", atual: totais.matFinAtual, meta: totais.matFinMeta, percent: totais.matFinPercent, color: "emerald" },
-              { label: "Fin Doc", atual: totais.finDocAtual, meta: totais.finDocMeta, percent: totais.finDocPercent, color: "orange" },
-              { label: "Mat Acad", atual: totais.matAcadAtual, meta: totais.matAcadMeta, percent: totais.matAcadPercent, color: "purple" },
-            ].map((item) => (
-              <div key={item.label} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-700">{item.label}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500">
-                      {formatNumber(item.atual)} / {formatNumber(item.meta)}
-                    </span>
-                    <span className={`text-sm font-bold px-2 py-0.5 rounded ${getProgressBg(item.percent)} ${getTextColor(item.percent)}`}>
-                      {item.percent}%
-                    </span>
-                  </div>
-                </div>
-                <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getProgressGradient(item.percent)} rounded-full transition-all duration-500`}
-                    style={{ width: `${Math.min(item.percent, 100)}%` }}
-                  />
-                  <div 
-                    className="absolute inset-y-0 flex items-center"
-                    style={{ left: `${Math.min(item.percent, 100)}%` }}
-                  >
-                    <div className="w-1 h-6 bg-gray-400 rounded-full -ml-0.5" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Acompanhamento por Campus - Mat Acad */}
+      {/* Top/Bottom Campus */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Top 5 Campus */}
         <Card className="border-0 shadow-md bg-white">
@@ -272,9 +310,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
               {topCampus.map((campus, index) => (
                 <div key={campus.codCampus} className="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl">
                   <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-white ${
-                    index === 0 ? 'bg-yellow-500' : 
-                    index === 1 ? 'bg-gray-400' : 
-                    index === 2 ? 'bg-amber-600' : 'bg-emerald-500'
+                    index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-emerald-500'
                   }`}>
                     {index + 1}
                   </div>
@@ -282,10 +318,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
                     <p className="text-sm font-medium text-gray-800 truncate">{campus.nomeCampus}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex-1 h-2 bg-emerald-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-emerald-500 rounded-full"
-                          style={{ width: `${Math.min(campus.matAcadPercent, 100)}%` }}
-                        />
+                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(campus.matAcadPercent, 100)}%` }} />
                       </div>
                       <span className="text-xs font-medium text-emerald-600">{campus.matAcadPercent}%</span>
                     </div>
@@ -322,10 +355,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
                     <p className="text-sm font-medium text-gray-800 truncate">{campus.nomeCampus}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex-1 h-2 bg-red-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-red-500 rounded-full"
-                          style={{ width: `${Math.min(campus.matAcadPercent, 100)}%` }}
-                        />
+                        <div className="h-full bg-red-500 rounded-full" style={{ width: `${Math.min(campus.matAcadPercent, 100)}%` }} />
                       </div>
                       <span className="text-xs font-medium text-red-600">{campus.matAcadPercent}%</span>
                     </div>
@@ -341,72 +371,165 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
         </Card>
       </div>
 
-      {/* Lista Completa de Campus */}
+      {/* Tabela de Campus */}
       <Card className="border-0 shadow-md bg-white">
         <CardContent className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Award className="h-5 w-5 text-gray-600" />
-            <div>
-              <h3 className="text-lg font-bold text-gray-800">Ranking Completo por Campus</h3>
-              <p className="text-xs text-gray-500">{campusData.filter(c => c.matAcadMeta > 0).length} campus com meta definida</p>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-100">
+                <Building2 className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-800">Dados por Campus</h3>
+                <p className="text-xs text-gray-500">{campusData.length} campus cadastrados</p>
+              </div>
+            </div>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Buscar campus..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-            {sortedCampus.filter(c => c.matAcadMeta > 0).map((campus, index) => (
-              <div 
-                key={campus.codCampus} 
-                className={`p-4 rounded-xl border shadow-sm transition-all hover:shadow-md ${
-                  campus.matAcadPercent >= 90 ? 'border-emerald-200 bg-emerald-50' :
-                  campus.matAcadPercent >= 70 ? 'border-yellow-200 bg-yellow-50' :
-                  campus.matAcadPercent >= 50 ? 'border-orange-200 bg-orange-50' :
-                  'border-red-200 bg-red-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                      index < 5 ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-600'
-                    }`}>
-                      #{index + 1}
-                    </span>
-                    <span className="text-sm font-medium text-gray-800 truncate max-w-[120px]">{campus.nomeCampus}</span>
-                  </div>
-                  <span className={`text-lg font-bold ${getTextColor(campus.matAcadPercent)}`}>
-                    {campus.matAcadPercent}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
-                  <span>{campus.matAcadAtual} / {campus.matAcadMeta}</span>
-                  <span>{campus.turmasComDados} turmas</span>
-                </div>
-                <div className={`h-2 rounded-full overflow-hidden ${getProgressBg(campus.matAcadPercent)}`}>
-                  <div 
-                    className={`h-full rounded-full bg-gradient-to-r ${getProgressGradient(campus.matAcadPercent)}`}
-                    style={{ width: `${Math.min(campus.matAcadPercent, 100)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+
+          <div className="rounded-lg border overflow-hidden">
+            <ScrollArea className="h-[400px]">
+              <Table>
+                <TableHeader className="sticky top-0 bg-gray-50">
+                  <TableRow>
+                    <TableHead className="font-semibold">Campus</TableHead>
+                    <TableHead className="text-center font-semibold">Turmas</TableHead>
+                    <TableHead className="text-center font-semibold">Confirmação</TableHead>
+                    <TableHead className="text-center font-semibold">Inscritos</TableHead>
+                    <TableHead className="text-center font-semibold">Mat Fin</TableHead>
+                    <TableHead className="text-center font-semibold">Fin Doc</TableHead>
+                    <TableHead className="text-center font-semibold">Mat Acad</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {/* Total Row */}
+                  <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-b-2 border-blue-200">
+                    <TableCell className="font-bold text-gray-800">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-blue-600" />
+                        TOTAL GERAL
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="font-bold text-gray-800">{filteredTotals.totalTurmas}</span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          <span className="font-bold text-emerald-600">{filteredTotals.turmasConfirmadas}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <XCircle className="h-4 w-4 text-red-500" />
+                          <span className="font-bold text-red-600">{filteredTotals.turmasNaoConfirmadas}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-sm font-medium">{formatNumber(filteredTotals.inscritosAtual)} / {formatNumber(filteredTotals.inscritosMeta)}</span>
+                        <PercentBadge percent={filteredTotalsPercent.inscritos} />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-sm font-medium">{formatNumber(filteredTotals.matFinAtual)} / {formatNumber(filteredTotals.matFinMeta)}</span>
+                        <PercentBadge percent={filteredTotalsPercent.matFin} />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-sm font-medium">{formatNumber(filteredTotals.finDocAtual)} / {formatNumber(filteredTotals.finDocMeta)}</span>
+                        <PercentBadge percent={filteredTotalsPercent.finDoc} />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-sm font-medium">{formatNumber(filteredTotals.matAcadAtual)} / {formatNumber(filteredTotals.matAcadMeta)}</span>
+                        <PercentBadge percent={filteredTotalsPercent.matAcad} />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+
+                  {filteredCampus.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                        Nenhum campus encontrado
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCampus.map((campus) => (
+                      <TableRow key={campus.codCampus} className="hover:bg-gray-50">
+                        <TableCell className="font-medium text-gray-800">
+                          <div>
+                            <p>{campus.nomeCampus}</p>
+                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                              <span className="px-1.5 py-0.5 bg-gray-100 rounded">{campus.codCampus}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 font-bold text-gray-700">
+                            {campus.totalTurmas}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="flex items-center gap-1">
+                              <CheckCircle className="h-4 w-4 text-emerald-500" />
+                              <span className="font-medium text-emerald-600">{campus.turmasConfirmadas}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <XCircle className="h-4 w-4 text-red-500" />
+                              <span className="font-medium text-red-600">{campus.turmasNaoConfirmadas}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-sm">{formatNumber(campus.inscritosAtual)} / {formatNumber(campus.inscritosMeta)}</span>
+                            <PercentBadge percent={campus.inscritosPercent} />
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-sm">{formatNumber(campus.matFinAtual)} / {formatNumber(campus.matFinMeta)}</span>
+                            <PercentBadge percent={campus.matFinPercent} />
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-sm">{formatNumber(campus.finDocAtual)} / {formatNumber(campus.finDocMeta)}</span>
+                            <PercentBadge percent={campus.finDocPercent} />
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-sm">{formatNumber(campus.matAcadAtual)} / {formatNumber(campus.matAcadMeta)}</span>
+                            <PercentBadge percent={campus.matAcadPercent} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </div>
+
+          <div className="mt-3 text-sm text-gray-500">
+            Mostrando {filteredCampus.length} de {campusData.length} campus
           </div>
         </CardContent>
       </Card>
-
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #d1d5db;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
-        }
-      `}</style>
     </div>
   );
 }
