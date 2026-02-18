@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, GraduationCap, FileText, BookOpen, CheckCircle, XCircle, Search } from "lucide-react";
+import { Users, GraduationCap, FileText, BookOpen, CheckCircle, XCircle, Search, Trophy } from "lucide-react";
 
 interface TotaisData {
   inscritosAtual: number;
@@ -120,8 +120,47 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
       .sort((a, b) => b.finDocAtual - a.finDocAtual);
   }, [turmas, search]);
 
-  // Get confirmed turmas for summary
-  const turmasConfirmadasList = turmas.filter(t => t.confirmado).slice(0, 6);
+  // Melhores Campus por MAT FIN
+  const melhoresCampus = useMemo(() => {
+    const campusMap = new Map<string, number>();
+    turmas.forEach((turma) => {
+      if (turma.temDados) {
+        campusMap.set(turma.nomeCampus, (campusMap.get(turma.nomeCampus) || 0) + turma.matFinAtual);
+      }
+    });
+    return Array.from(campusMap.entries())
+      .map(([nome, matFin]) => ({ nome, matFin }))
+      .sort((a, b) => b.matFin - a.matFin)
+      .slice(0, 5);
+  }, [turmas]);
+
+  // Melhores Cursos por MAT FIN
+  const melhoresCursos = useMemo(() => {
+    const cursoMap = new Map<string, number>();
+    turmas.forEach((turma) => {
+      if (turma.temDados) {
+        cursoMap.set(turma.nomeCurso, (cursoMap.get(turma.nomeCurso) || 0) + turma.matFinAtual);
+      }
+    });
+    return Array.from(cursoMap.entries())
+      .map(([nome, matFin]) => ({ nome, matFin }))
+      .sort((a, b) => b.matFin - a.matFin)
+      .slice(0, 5);
+  }, [turmas]);
+
+  // Melhores Turnos por MAT FIN
+  const melhoresTurnos = useMemo(() => {
+    const turnoMap = new Map<string, number>();
+    turmas.forEach((turma) => {
+      if (turma.temDados) {
+        turnoMap.set(turma.turno, (turnoMap.get(turma.turno) || 0) + turma.matFinAtual);
+      }
+    });
+    return Array.from(turnoMap.entries())
+      .map(([nome, matFin]) => ({ nome, matFin }))
+      .sort((a, b) => b.matFin - a.matFin)
+      .slice(0, 5);
+  }, [turmas]);
 
   return (
     <div className="space-y-6">
@@ -219,35 +258,88 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
           </CardContent>
         </Card>
 
-        {/* Lista de Turmas Confirmadas */}
+        {/* Melhores Campus, Cursos e Turnos por MAT FIN */}
         <Card className="border-0 shadow-md bg-white">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-emerald-100">
-                <CheckCircle className="h-5 w-5 text-emerald-600" />
+              <div className="p-2 rounded-lg bg-amber-100">
+                <Trophy className="h-5 w-5 text-amber-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Turmas Confirmadas</h3>
-                <p className="text-xs text-gray-500">fin_doc ≥ PE do curso</p>
+                <h3 className="text-lg font-bold text-gray-800">Top 5 por MAT FIN</h3>
+                <p className="text-xs text-gray-500">Melhores desempenhos em Matrículas Financeiras</p>
               </div>
             </div>
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
-              {turmasConfirmadasList.length > 0 ? (
-                turmasConfirmadasList.map((turma) => (
-                  <div key={turma.id} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                    <div>
-                      <p className="text-sm font-medium text-gray-800">{turma.nomeCurso}</p>
-                      <p className="text-xs text-gray-500">{turma.nomeCampus} - {turma.turno}</p>
+            
+            <div className="grid grid-cols-3 gap-4">
+              {/* Melhores Campus */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Campus</p>
+                <div className="space-y-2">
+                  {melhoresCampus.map((campus, index) => (
+                    <div key={campus.nome} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                          index === 0 ? 'bg-amber-400 text-white' :
+                          index === 1 ? 'bg-gray-300 text-gray-700' :
+                          index === 2 ? 'bg-orange-300 text-white' :
+                          'bg-gray-200 text-gray-600'
+                        }`}>
+                          {index + 1}
+                        </span>
+                        <span className="text-xs font-medium text-gray-800 truncate max-w-[80px]">{campus.nome}</span>
+                      </div>
+                      <span className="text-xs font-bold text-blue-600">{formatNumber(campus.matFin)}</span>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-emerald-600">{turma.finDocAtual}</p>
-                      <p className="text-xs text-gray-500">PE: {turma.pe}</p>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Melhores Cursos */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Cursos</p>
+                <div className="space-y-2">
+                  {melhoresCursos.map((curso, index) => (
+                    <div key={curso.nome} className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                          index === 0 ? 'bg-amber-400 text-white' :
+                          index === 1 ? 'bg-gray-300 text-gray-700' :
+                          index === 2 ? 'bg-orange-300 text-white' :
+                          'bg-gray-200 text-gray-600'
+                        }`}>
+                          {index + 1}
+                        </span>
+                        <span className="text-xs font-medium text-gray-800 truncate max-w-[80px]">{curso.nome}</span>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-600">{formatNumber(curso.matFin)}</span>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-8">Nenhuma turma confirmada</p>
-              )}
+                  ))}
+                </div>
+              </div>
+              
+              {/* Melhores Turnos */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Turnos</p>
+                <div className="space-y-2">
+                  {melhoresTurnos.map((turno, index) => (
+                    <div key={turno.nome} className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                          index === 0 ? 'bg-amber-400 text-white' :
+                          index === 1 ? 'bg-gray-300 text-gray-700' :
+                          index === 2 ? 'bg-orange-300 text-white' :
+                          'bg-gray-200 text-gray-600'
+                        }`}>
+                          {index + 1}
+                        </span>
+                        <span className="text-xs font-medium text-gray-800">{turno.nome}</span>
+                      </div>
+                      <span className="text-xs font-bold text-purple-600">{formatNumber(turno.matFin)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

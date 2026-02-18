@@ -85,7 +85,7 @@ export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card className="border-0 shadow-md bg-gradient-to-br from-purple-500 to-purple-600">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -95,34 +95,6 @@ export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
               <div>
                 <p className="text-sm text-white/80">Turmas com Gap</p>
                 <p className="text-2xl font-bold text-white">{turmasComGap.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md bg-gradient-to-br from-blue-500 to-blue-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-white/20">
-                <CheckCircle className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-white/80">Total FIN DOC</p>
-                <p className="text-2xl font-bold text-white">{formatNumber(totais.totalFinDoc)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-500 to-emerald-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-white/20">
-                <Users className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-white/80">Total MAT ACAD</p>
-                <p className="text-2xl font-bold text-white">{formatNumber(totais.totalMatAcad)}</p>
               </div>
             </div>
           </CardContent>
