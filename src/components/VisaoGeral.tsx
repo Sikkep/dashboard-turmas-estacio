@@ -258,28 +258,28 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
           </CardContent>
         </Card>
 
-        {/* Melhores Campus, Cursos e Turnos por MAT FIN */}
+        {/* Top 5 Campus por MAT FIN */}
         <Card className="border-0 shadow-md bg-white">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-amber-100">
-                <Trophy className="h-5 w-5 text-amber-600" />
+              <div className="p-2 rounded-lg bg-blue-100">
+                <Trophy className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Top 5 por MAT FIN</h3>
-                <p className="text-xs text-gray-500">Melhores desempenhos em Matrículas Financeiras</p>
+                <h3 className="text-lg font-bold text-gray-800">Top 5 Campus por MAT FIN</h3>
+                <p className="text-xs text-gray-500">Melhores campi em Matrículas Financeiras</p>
               </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-4">
-              {/* Melhores Campus */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Campus</p>
-                <div className="space-y-2">
-                  {melhoresCampus.map((campus, index) => (
-                    <div key={campus.nome} className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
+            <div className="space-y-3">
+              {melhoresCampus.map((campus, index) => {
+                const maxValue = melhoresCampus[0]?.matFin || 1;
+                const percent = (campus.matFin / maxValue) * 100;
+                return (
+                  <div key={campus.nome}>
+                    <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                           index === 0 ? 'bg-amber-400 text-white' :
                           index === 1 ? 'bg-gray-300 text-gray-700' :
                           index === 2 ? 'bg-orange-300 text-white' :
@@ -287,22 +287,48 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
                         }`}>
                           {index + 1}
                         </span>
-                        <span className="text-xs font-medium text-gray-800 truncate max-w-[80px]">{campus.nome}</span>
+                        <span className="text-sm font-medium text-gray-800">{campus.nome}</span>
                       </div>
-                      <span className="text-xs font-bold text-blue-600">{formatNumber(campus.matFin)}</span>
+                      <span className="text-sm font-bold text-blue-600">{formatNumber(campus.matFin)}</span>
                     </div>
-                  ))}
-                </div>
+                    <div className="w-full bg-gray-100 rounded-full h-4">
+                      <div 
+                        className="bg-gradient-to-r from-blue-400 to-blue-600 h-4 rounded-full transition-all duration-500"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Gráficos de Cursos e Turnos */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Top 5 Cursos por MAT FIN */}
+        <Card className="border-0 shadow-md bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-lg bg-emerald-100">
+                <Trophy className="h-5 w-5 text-emerald-600" />
               </div>
-              
-              {/* Melhores Cursos */}
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Cursos</p>
-                <div className="space-y-2">
-                  {melhoresCursos.map((curso, index) => (
-                    <div key={curso.nome} className="flex items-center justify-between p-2 bg-emerald-50 rounded-lg">
+                <h3 className="text-lg font-bold text-gray-800">Top 5 Cursos por MAT FIN</h3>
+                <p className="text-xs text-gray-500">Melhores cursos em Matrículas Financeiras</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              {melhoresCursos.map((curso, index) => {
+                const maxValue = melhoresCursos[0]?.matFin || 1;
+                const percent = (curso.matFin / maxValue) * 100;
+                return (
+                  <div key={curso.nome}>
+                    <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                           index === 0 ? 'bg-amber-400 text-white' :
                           index === 1 ? 'bg-gray-300 text-gray-700' :
                           index === 2 ? 'bg-orange-300 text-white' :
@@ -310,22 +336,45 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
                         }`}>
                           {index + 1}
                         </span>
-                        <span className="text-xs font-medium text-gray-800 truncate max-w-[80px]">{curso.nome}</span>
+                        <span className="text-sm font-medium text-gray-800">{curso.nome}</span>
                       </div>
-                      <span className="text-xs font-bold text-emerald-600">{formatNumber(curso.matFin)}</span>
+                      <span className="text-sm font-bold text-emerald-600">{formatNumber(curso.matFin)}</span>
                     </div>
-                  ))}
-                </div>
+                    <div className="w-full bg-gray-100 rounded-full h-4">
+                      <div 
+                        className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-4 rounded-full transition-all duration-500"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Top 5 Turnos por MAT FIN */}
+        <Card className="border-0 shadow-md bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 rounded-lg bg-purple-100">
+                <Trophy className="h-5 w-5 text-purple-600" />
               </div>
-              
-              {/* Melhores Turnos */}
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Turnos</p>
-                <div className="space-y-2">
-                  {melhoresTurnos.map((turno, index) => (
-                    <div key={turno.nome} className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
+                <h3 className="text-lg font-bold text-gray-800">Top 5 Turnos por MAT FIN</h3>
+                <p className="text-xs text-gray-500">Melhores turnos em Matrículas Financeiras</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              {melhoresTurnos.map((turno, index) => {
+                const maxValue = melhoresTurnos[0]?.matFin || 1;
+                const percent = (turno.matFin / maxValue) * 100;
+                return (
+                  <div key={turno.nome}>
+                    <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                           index === 0 ? 'bg-amber-400 text-white' :
                           index === 1 ? 'bg-gray-300 text-gray-700' :
                           index === 2 ? 'bg-orange-300 text-white' :
@@ -333,13 +382,19 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
                         }`}>
                           {index + 1}
                         </span>
-                        <span className="text-xs font-medium text-gray-800">{turno.nome}</span>
+                        <span className="text-sm font-medium text-gray-800">{turno.nome}</span>
                       </div>
-                      <span className="text-xs font-bold text-purple-600">{formatNumber(turno.matFin)}</span>
+                      <span className="text-sm font-bold text-purple-600">{formatNumber(turno.matFin)}</span>
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div className="w-full bg-gray-100 rounded-full h-4">
+                      <div 
+                        className="bg-gradient-to-r from-purple-400 to-purple-600 h-4 rounded-full transition-all duration-500"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
