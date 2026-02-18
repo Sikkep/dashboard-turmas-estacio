@@ -155,7 +155,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
           iconBg="bg-emerald-100"
         />
         <MetaCard
-          title="FINANCEIRO DOCUMENTADO"
+          title="FIN DOC"
           atual={totais.finDocAtual}
           meta={totais.finDocMeta}
           percent={totais.finDocPercent}

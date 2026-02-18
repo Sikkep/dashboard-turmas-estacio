@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, GraduationCap, FileText, BookOpen, CheckCircle, XCircle, Building2, AlertTriangle } from "lucide-react";
+import { Users, GraduationCap, FileText, BookOpen, CheckCircle, XCircle } from "lucide-react";
 
 interface TotaisData {
   inscritosAtual: number;
@@ -64,54 +64,11 @@ function KPICard({ title, value, icon, gradient, iconBg }: KPICardProps) {
   );
 }
 
-interface StatCardProps {
-  label: string;
-  value: number;
-  total?: number;
-  color: string;
-  bgColor: string;
-  icon: React.ReactNode;
-  showPercent?: boolean;
-}
-
-function StatCard({ label, value, total, color, bgColor, icon, showPercent = false }: StatCardProps) {
-  const percent = total && total > 0 ? Math.round((value / total) * 100) : 0;
-  
-  return (
-    <div className={`${bgColor} rounded-2xl p-5 border shadow-sm`}>
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`p-2 rounded-lg ${color.replace('text-', 'bg-').replace('-600', '-100')}`}>
-          {icon}
-        </div>
-        <span className="text-sm font-medium text-gray-600">{label}</span>
-      </div>
-      <div className="flex items-end gap-2">
-        <span className={`text-2xl font-bold ${color}`}>{formatNumber(value)}</span>
-        {total !== undefined && (
-          <span className="text-sm text-gray-500 mb-1">de {formatNumber(total)}</span>
-        )}
-      </div>
-      {showPercent && total !== undefined && total > 0 && (
-        <div className="mt-3">
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className={`h-full rounded-full ${color.replace('text-', 'bg-').replace('-600', '-500')}`}
-              style={{ width: `${Math.min(percent, 100)}%` }}
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-1">{percent}% do total</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
   const totalTurmasComPE = totais.turmasConfirmadas + totais.turmasNaoConfirmadas;
   const percentConfirmadas = totalTurmasComPE > 0 
     ? Math.round((totais.turmasConfirmadas / totalTurmasComPE) * 100) 
     : 0;
-  const turmasSemDados = totais.totalTurmas - totais.turmasComDados;
 
   // Get confirmed turmas
   const turmasConfirmadasList = turmas.filter(t => t.confirmado).slice(0, 6);
@@ -144,7 +101,7 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
           icon={<GraduationCap className="h-6 w-6 text-white" />}
         />
         <KPICard
-          title="FINANCEIRO DOCUMENTADO"
+          title="FIN DOC"
           value={totais.finDocAtual}
           gradient="bg-gradient-to-br from-orange-500 to-orange-600"
           iconBg="bg-orange-400/30"
@@ -156,43 +113,6 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
           gradient="bg-gradient-to-br from-purple-500 to-purple-600"
           iconBg="bg-purple-400/30"
           icon={<BookOpen className="h-6 w-6 text-white" />}
-        />
-      </div>
-
-      {/* Seção de Turmas */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-0 shadow-md bg-white">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200">
-                <Building2 className="h-8 w-8 text-slate-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 font-medium">Total de Turmas</p>
-                <p className="text-3xl font-bold text-gray-800">{totais.totalTurmas}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <StatCard
-          label="Com Dados"
-          value={totais.turmasComDados}
-          total={totais.totalTurmas}
-          color="text-emerald-600"
-          bgColor="bg-emerald-50 border-emerald-200"
-          icon={<CheckCircle className="h-5 w-5 text-emerald-600" />}
-          showPercent
-        />
-
-        <StatCard
-          label="Sem Dados"
-          value={turmasSemDados}
-          total={totais.totalTurmas}
-          color="text-red-600"
-          bgColor="bg-red-50 border-red-200"
-          icon={<AlertTriangle className="h-5 w-5 text-red-600" />}
-          showPercent
         />
       </div>
 

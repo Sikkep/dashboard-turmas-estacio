@@ -302,12 +302,6 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200">
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                <span className="text-sm font-medium text-blue-700">
-                  {displayData.totais.turmasComDados} de {displayData.totais.totalTurmas} turmas
-                </span>
-              </div>
               {lastSync && (
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                   <RefreshCw className="h-3 w-3" />
