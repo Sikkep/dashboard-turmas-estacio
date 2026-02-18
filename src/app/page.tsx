@@ -285,15 +285,17 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
       {/* Header */}
       <header className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 md:px-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="container mx-auto px-4 py-3 md:px-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                <GraduationCap className="h-7 w-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-800">
-                  Dashboard Turmas Estácio
+              <img 
+                src="https://logodownload.org/wp-content/uploads/2014/12/estacio-logo-faculdade-5.jpg" 
+                alt="Estácio" 
+                className="h-10 md:h-12 w-auto object-contain"
+              />
+              <div className="border-l border-gray-300 pl-4">
+                <h1 className="text-lg md:text-xl font-bold text-gray-800">
+                  Dashboard Turmas
                 </h1>
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <Calendar className="h-4 w-4" />
@@ -302,6 +304,9 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <div className="text-xs text-gray-500">
+                © Daniel Villa
+              </div>
               {lastSync && (
                 <div className="flex items-center gap-1 text-xs text-gray-500">
                   <RefreshCw className="h-3 w-3" />
