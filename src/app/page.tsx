@@ -6,6 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2, GraduationCap, Calendar, RefreshCw } from "lucide-react";
 import VisaoGeral from "@/components/VisaoGeral";
 import VisaoMeta from "@/components/VisaoMeta";
+import TurmasProximas from "@/components/TurmasProximas";
 import UploadForm from "@/components/UploadForm";
 import FilterBar from "@/components/FilterBar";
 
@@ -340,6 +341,12 @@ export default function Dashboard() {
               >
                 Atingimento de Meta
               </TabsTrigger>
+              <TabsTrigger
+                value="turmas-proximas"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
+              >
+                Próximas de Confirmar
+              </TabsTrigger>
               {!isProduction && (
                 <TabsTrigger
                   value="upload"
@@ -357,6 +364,10 @@ export default function Dashboard() {
 
           <TabsContent value="visao-meta" className="mt-0">
             <VisaoMeta totais={displayData.totais} campusData={displayData.campusData} />
+          </TabsContent>
+
+          <TabsContent value="turmas-proximas" className="mt-0">
+            <TurmasProximas turmas={displayData.turmas} />
           </TabsContent>
 
           {!isProduction && (

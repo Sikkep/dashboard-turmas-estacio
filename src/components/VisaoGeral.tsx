@@ -123,17 +123,6 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
   // Get confirmed turmas for summary
   const turmasConfirmadasList = turmas.filter(t => t.confirmado).slice(0, 6);
 
-  // Get turmas proximas de confirmar (fin_doc até 3 menor que PE)
-  const turmasProximasConfirmar = useMemo(() => {
-    return turmas
-      .filter((turma) => {
-        if (turma.pe <= 0 || turma.confirmado || !turma.temDados) return false;
-        const diferenca = turma.pe - turma.finDocAtual;
-        return diferenca > 0 && diferenca <= 3;
-      })
-      .sort((a, b) => (a.pe - a.finDocAtual) - (b.pe - b.finDocAtual));
-  }, [turmas]);
-
   return (
     <div className="space-y-6">
       {/* Header Section */}
@@ -263,46 +252,6 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Turmas Próximas de Confirmar */}
-      {turmasProximasConfirmar.length > 0 && (
-        <Card className="border-0 shadow-md bg-gradient-to-br from-amber-50 to-yellow-50 border-l-4 border-l-amber-500">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-amber-100">
-                <CheckCircle className="h-5 w-5 text-amber-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">Turmas Próximas de Confirmar</h3>
-                <p className="text-xs text-gray-500">fin_doc até 3 menor que o PE • {turmasProximasConfirmar.length} turmas</p>
-              </div>
-            </div>
-            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-              {turmasProximasConfirmar.map((turma) => {
-                const diferenca = turma.pe - turma.finDocAtual;
-                return (
-                  <div key={turma.id} className="flex items-center justify-between p-3 bg-white rounded-xl border border-amber-200 shadow-sm">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{turma.nomeCurso}</p>
-                      <p className="text-xs text-gray-500 truncate">{turma.nomeCampus} - {turma.turno}</p>
-                    </div>
-                    <div className="text-right ml-2">
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-amber-600">{turma.finDocAtual}</span>
-                        <span className="text-xs text-gray-400">/</span>
-                        <span className="text-sm text-gray-600">{turma.pe}</span>
-                      </div>
-                      <p className="text-xs text-amber-600 font-medium">
-                        falta {diferenca}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Tabela de Turmas */}
       <Card className="border-0 shadow-md bg-white">
