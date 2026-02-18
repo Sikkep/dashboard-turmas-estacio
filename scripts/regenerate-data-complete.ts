@@ -276,11 +276,11 @@ async function main() {
     const metaKey = `${data.codCampus}_${data.codCurso}`;
     const meta = metasAggregated.get(metaKey);
     
-    // Each turma shows the FULL meta for its campus+curso
-    const inscritosMeta = meta ? meta.inscritosMeta : 0;
-    const matFinMeta = meta ? meta.matFinMeta : 0;
-    const finDocMeta = meta ? meta.finDocMeta : 0;
-    const matAcadMeta = meta ? meta.matAcadMeta : 0;
+    // Each turma shows the FULL meta for its campus+curso (rounded)
+    const inscritosMeta = meta ? Math.round(meta.inscritosMeta) : 0;
+    const matFinMeta = meta ? Math.round(meta.matFinMeta) : 0;
+    const finDocMeta = meta ? Math.round(meta.finDocMeta) : 0;
+    const matAcadMeta = meta ? Math.round(meta.matAcadMeta) : 0;
     
     const turmaMatch = portfolioMap.get(key);
     
@@ -368,16 +368,16 @@ async function main() {
         nomeMunicipio: turma.nomeMunicipio,
         temDados: false,
         inscritosAtual: 0,
-        inscritosMeta: meta ? meta.inscritosMeta : 0,
+        inscritosMeta: meta ? Math.round(meta.inscritosMeta) : 0,
         inscritosPercent: 0,
         matFinAtual: 0,
-        matFinMeta: meta ? meta.matFinMeta : 0,
+        matFinMeta: meta ? Math.round(meta.matFinMeta) : 0,
         matFinPercent: 0,
         finDocAtual: 0,
-        finDocMeta: meta ? meta.finDocMeta : 0,
+        finDocMeta: meta ? Math.round(meta.finDocMeta) : 0,
         finDocPercent: 0,
         matAcadAtual: 0,
-        matAcadMeta: meta ? meta.matAcadMeta : 0,
+        matAcadMeta: meta ? Math.round(meta.matAcadMeta) : 0,
         matAcadPercent: 0,
       });
       processedKeys.add(key);
@@ -434,6 +434,10 @@ async function main() {
   
   const campusData = [...campusMap.values()].map(c => ({
     ...c,
+    inscritosMeta: Math.round(c.inscritosMeta),
+    matFinMeta: Math.round(c.matFinMeta),
+    finDocMeta: Math.round(c.finDocMeta),
+    matAcadMeta: Math.round(c.matAcadMeta),
     inscritosPercent: c.inscritosMeta > 0 ? Math.round((c.inscritosAtual / c.inscritosMeta) * 100) : 0,
     matFinPercent: c.matFinMeta > 0 ? Math.round((c.matFinAtual / c.matFinMeta) * 100) : 0,
     finDocPercent: c.finDocMeta > 0 ? Math.round((c.finDocAtual / c.finDocMeta) * 100) : 0,
@@ -459,13 +463,13 @@ async function main() {
   const dashboardData = {
     totais: {
       inscritosAtual: totalInscritosAtual,
-      inscritosMeta: Math.round(totalInscritosMeta * 100) / 100,
+      inscritosMeta: Math.round(totalInscritosMeta),
       matFinAtual: totalMatFinAtual,
-      matFinMeta: Math.round(totalMatFinMeta * 100) / 100,
+      matFinMeta: Math.round(totalMatFinMeta),
       finDocAtual: totalFinDocAtual,
-      finDocMeta: Math.round(totalFinDocMeta * 100) / 100,
+      finDocMeta: Math.round(totalFinDocMeta),
       matAcadAtual: totalMatAcadAtual,
-      matAcadMeta: Math.round(totalMatAcadMeta * 100) / 100,
+      matAcadMeta: Math.round(totalMatAcadMeta),
       totalTurmas: portfolio.length,
       turmasComDados: dadosAggregated.size,
       inscritosPercent,
