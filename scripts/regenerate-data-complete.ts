@@ -268,6 +268,13 @@ async function main() {
     totalMatAcadMeta += meta.matAcadMeta;
   }
   
+  // Count turnos per campus+curso for proportional meta distribution
+  const turnosPorCurso = new Map<string, number>();
+  for (const [key, data] of dadosAggregated) {
+    const cursoKey = `${data.codCampus}_${data.codCurso}`;
+    turnosPorCurso.set(cursoKey, (turnosPorCurso.get(cursoKey) || 0) + 1);
+  }
+  
   const turmasData: any[] = [];
   const processedKeys = new Set<string>();
   
@@ -275,12 +282,13 @@ async function main() {
   for (const [key, data] of dadosAggregated) {
     const metaKey = `${data.codCampus}_${data.codCurso}`;
     const meta = metasAggregated.get(metaKey);
+    const numTurnos = turnosPorCurso.get(metaKey) || 1;
     
-    // Each turma shows the FULL meta for its campus+curso (rounded)
-    const inscritosMeta = meta ? Math.round(meta.inscritosMeta) : 0;
-    const matFinMeta = meta ? Math.round(meta.matFinMeta) : 0;
-    const finDocMeta = meta ? Math.round(meta.finDocMeta) : 0;
-    const matAcadMeta = meta ? Math.round(meta.matAcadMeta) : 0;
+    // Divide meta proportionally among turnos (rounded)
+    const inscritosMeta = meta ? Math.round(meta.inscritosMeta / numTurnos) : 0;
+    const matFinMeta = meta ? Math.round(meta.matFinMeta / numTurnos) : 0;
+    const finDocMeta = meta ? Math.round(meta.finDocMeta / numTurnos) : 0;
+    const matAcadMeta = meta ? Math.round(meta.matAcadMeta / numTurnos) : 0;
     
     const turmaMatch = portfolioMap.get(key);
     
@@ -352,6 +360,7 @@ async function main() {
       // Check if there's a meta for this campus+curso
       const metaKey = `${turma.codCampus}_${turma.codCurso}`;
       const meta = metasAggregated.get(metaKey);
+      const numTurnos = turnosPorCurso.get(metaKey) || 1;
       
       turmasData.push({
         id: `turma_${key}`,
@@ -368,16 +377,16 @@ async function main() {
         nomeMunicipio: turma.nomeMunicipio,
         temDados: false,
         inscritosAtual: 0,
-        inscritosMeta: meta ? Math.round(meta.inscritosMeta) : 0,
+        inscritosMeta: meta ? Math.round(meta.inscritosMeta / numTurnos) : 0,
         inscritosPercent: 0,
         matFinAtual: 0,
-        matFinMeta: meta ? Math.round(meta.matFinMeta) : 0,
+        matFinMeta: meta ? Math.round(meta.matFinMeta / numTurnos) : 0,
         matFinPercent: 0,
         finDocAtual: 0,
-        finDocMeta: meta ? Math.round(meta.finDocMeta) : 0,
+        finDocMeta: meta ? Math.round(meta.finDocMeta / numTurnos) : 0,
         finDocPercent: 0,
         matAcadAtual: 0,
-        matAcadMeta: meta ? Math.round(meta.matAcadMeta) : 0,
+        matAcadMeta: meta ? Math.round(meta.matAcadMeta / numTurnos) : 0,
         matAcadPercent: 0,
       });
       processedKeys.add(key);
