@@ -170,6 +170,11 @@ export default function Dashboard() {
   const filteredData = useMemo(() => {
     if (!data || !isProduction) return data;
     
+    // If no filters, return original data with correct totals
+    if (selectedCampus === "all" && selectedCurso === "all" && selectedTurno === "all") {
+      return data;
+    }
+    
     let filteredTurmas = data.turmas;
     let filteredCampus = data.campusData;
 
@@ -184,7 +189,7 @@ export default function Dashboard() {
       filteredTurmas = filteredTurmas.filter(t => t.codTurno === selectedTurno);
     }
 
-    // Recalculate totals
+    // Recalculate totals only when filtering
     const totais = {
       inscritosAtual: 0, inscritosMeta: 0, inscritosPercent: 0,
       matFinAtual: 0, matFinMeta: 0, matFinPercent: 0,
