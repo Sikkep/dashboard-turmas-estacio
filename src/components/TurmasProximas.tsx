@@ -85,7 +85,7 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Turmas Próximas de Confirmar</h2>
-          <p className="text-sm text-gray-500">Turmas com fin_doc até 3 menor que o PE</p>
+          <p className="text-sm text-gray-500">Turmas com <strong>FIN DOC</strong> até 3 alunos abaixo do PE</p>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
                 <AlertCircle className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-white/80">Falta 1</p>
+                <p className="text-sm text-white/80">FIN DOC 1 abaixo</p>
                 <p className="text-2xl font-bold text-white">{turmasPorDiferenca[1]?.length || 0}</p>
               </div>
             </div>
@@ -126,7 +126,7 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
                 <AlertCircle className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-white/80">Faltam 2</p>
+                <p className="text-sm text-white/80">FIN DOC 2 abaixo</p>
                 <p className="text-2xl font-bold text-white">{turmasPorDiferenca[2]?.length || 0}</p>
               </div>
             </div>
@@ -140,7 +140,7 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
                 <AlertCircle className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-white/80">Faltam 3</p>
+                <p className="text-sm text-white/80">FIN DOC 3 abaixo</p>
                 <p className="text-2xl font-bold text-white">{turmasPorDiferenca[3]?.length || 0}</p>
               </div>
             </div>
@@ -172,10 +172,10 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
                 <CardContent className="p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Badge className={`${badgeColors[diferenca as 1|2|3]} text-white`}>
-                      Falta {diferenca}
+                      FIN DOC {diferenca} abaixo do PE
                     </Badge>
                     <span className="text-sm text-gray-600">
-                      {turmasGrupo.length} turma{turmasGrupo.length > 1 ? "s" : ""} necessitando de {diferenca} aluno{diferenca > 1 ? "s" : ""}
+                      {turmasGrupo.length} turma{turmasGrupo.length > 1 ? "s" : ""} precisando de {diferenca} FIN DOC
                     </span>
                   </div>
                   <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -190,14 +190,14 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
                             <p className="text-xs text-gray-500 truncate">{turma.nomeCampus} - {turma.turno}</p>
                           </div>
                           <div className="text-right ml-2">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1 justify-end">
+                              <span className="text-xs text-gray-500">FIN DOC:</span>
                               <span className="text-lg font-bold text-amber-600">{turma.finDocAtual}</span>
-                              <span className="text-gray-400">/</span>
+                            </div>
+                            <div className="flex items-center gap-1 justify-end">
+                              <span className="text-xs text-gray-500">PE:</span>
                               <span className="text-lg text-gray-600">{turma.pe}</span>
                             </div>
-                            <p className="text-xs text-gray-500">
-                              Inscritos: {turma.inscritosAtual}
-                            </p>
                           </div>
                         </div>
                       </div>
@@ -221,7 +221,7 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Lista Completa</h3>
                 <p className="text-xs text-gray-500">
-                  {turmasProximasConfirmar.length} turmas próximas de confirmar
+                  {turmasProximasConfirmar.length} turmas com FIN DOC até 3 abaixo do PE
                 </p>
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
               <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500">Nenhuma turma próxima de confirmar</p>
               <p className="text-sm text-gray-400 mt-1">
-                Todas as turmas estão confirmadas ou muito distantes do PE
+                Todas as turmas estão confirmadas ou FIN DOC muito abaixo do PE
               </p>
             </div>
           ) : (
@@ -255,9 +255,9 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
                       <TableHead className="font-semibold">Turno</TableHead>
                       <TableHead className="text-center font-semibold">Inscritos</TableHead>
                       <TableHead className="text-center font-semibold">Mat Fin</TableHead>
-                      <TableHead className="text-center font-semibold">Fin Doc</TableHead>
+                      <TableHead className="text-center font-semibold">FIN DOC</TableHead>
                       <TableHead className="text-center font-semibold">PE</TableHead>
-                      <TableHead className="text-center font-semibold">Falta</TableHead>
+                      <TableHead className="text-center font-semibold">FIN DOC faltam</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
