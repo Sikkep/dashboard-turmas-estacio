@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, GraduationCap, FileText, BookOpen, TrendingUp, Target, AlertTriangle, Search, Building2 } from "lucide-react";
+import { Users, GraduationCap, FileText, BookOpen, TrendingUp, Target, AlertTriangle, Search, Building2, Trophy, CheckCircle } from "lucide-react";
 
 interface TotaisData {
   inscritosAtual: number;
@@ -50,9 +50,24 @@ interface CampusData {
   turmasNaoConfirmadas: number;
 }
 
+interface TurmaData {
+  id: string;
+  nomeCampus: string;
+  nomeCurso: string;
+  turno: string;
+  temDados: boolean;
+  finDocAtual: number;
+  pe: number;
+  confirmado: boolean;
+  inscritosAtual: number;
+  matFinAtual: number;
+  matAcadAtual: number;
+}
+
 interface VisaoMetaProps {
   totais: TotaisData;
   campusData: CampusData[];
+  turmas: TurmaData[];
 }
 
 function formatNumber(num: number): string {
@@ -80,20 +95,6 @@ function getTextColor(percent: number): string {
   if (percent >= 70) return "text-yellow-600";
   if (percent >= 50) return "text-orange-600";
   return "text-red-600";
-}
-
-function PercentBadge({ percent }: { percent: number }) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <span className={`text-sm font-bold ${getTextColor(percent)}`}>{percent}%</span>
-      <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full ${getProgressBg(percent).replace('bg-', 'bg-').replace('-100', '-500')}`}
-          style={{ width: `${Math.min(percent, 100)}%` }}
-        />
-      </div>
-    </div>
-  );
 }
 
 interface MetaCardProps {
@@ -146,7 +147,7 @@ function MetaCard({ title, atual, meta, percent, icon, gradient, iconBg }: MetaC
   );
 }
 
-export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
+export default function VisaoMeta({ totais, campusData, turmas }: VisaoMetaProps) {
   const [search, setSearch] = useState("");
 
   // Sort campus by mat_acad percent (descending)
@@ -160,9 +161,35 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
     );
   }, [sortedCampus, search]);
 
-  // Top 5 and bottom 5 campus
+  // Top 5 Campus
   const topCampus = sortedCampus.slice(0, 5);
-  const bottomCampus = sortedCampus.filter(c => c.matAcadMeta > 0).slice(-5).reverse();
+
+  // Cursos mais confirmados (top 5)
+  const cursosMaisConfirmados = useMemo(() => {
+    const cursoMap = new Map<string, { confirmadas: number; total: number }>();
+    
+    turmas.forEach((turma) => {
+      if (!turma.temDados || turma.pe <= 0) return;
+      
+      const atual = cursoMap.get(turma.nomeCurso) || { confirmadas: 0, total: 0 };
+      atual.total++;
+      if (turma.confirmado) {
+        atual.confirmadas++;
+      }
+      cursoMap.set(turma.nomeCurso, atual);
+    });
+    
+    return Array.from(cursoMap.entries())
+      .map(([nome, data]) => ({
+        nome,
+        confirmadas: data.confirmadas,
+        total: data.total,
+        percent: Math.round((data.confirmadas / data.total) * 100),
+      }))
+      .filter(c => c.confirmadas > 0)
+      .sort((a, b) => b.confirmadas - a.confirmadas)
+      .slice(0, 5);
+  }, [turmas]);
 
   // Calculate gap values
   const inscritosGap = totais.inscritosMeta - totais.inscritosAtual;
@@ -256,7 +283,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
         </CardContent>
       </Card>
 
-      {/* Top/Bottom Campus */}
+      {/* Top 5 Campus e Cursos Mais Confirmados */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Top 5 Campus */}
         <Card className="border-0 shadow-md bg-white">
@@ -297,39 +324,51 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
           </CardContent>
         </Card>
 
-        {/* Bottom 5 Campus */}
+        {/* Cursos Mais Confirmados */}
         <Card className="border-0 shadow-md bg-white">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <div className="p-2 rounded-lg bg-red-100">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
+              <div className="p-2 rounded-lg bg-blue-100">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-800">Atenção Necessária</h3>
-                <p className="text-xs text-gray-500">Menor atingimento de Mat Acad</p>
+                <h3 className="text-lg font-bold text-gray-800">Cursos Mais Confirmados</h3>
+                <p className="text-xs text-gray-500">Turmas com FIN DOC ≥ PE</p>
               </div>
             </div>
             <div className="space-y-3">
-              {bottomCampus.map((campus, index) => (
-                <div key={campus.codCampus} className="flex items-center gap-3 p-3 bg-red-50 rounded-xl">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500 font-bold text-white">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate">{campus.nomeCampus}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 h-2 bg-red-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-red-500 rounded-full" style={{ width: `${Math.min(campus.matAcadPercent, 100)}%` }} />
+              {cursosMaisConfirmados.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">Nenhum curso confirmado</p>
+              ) : (
+                cursosMaisConfirmados.map((curso, index) => {
+                  const maxConfirmadas = cursosMaisConfirmados[0]?.confirmadas || 1;
+                  const percent = (curso.confirmadas / maxConfirmadas) * 100;
+                  return (
+                    <div key={curso.nome}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            index === 0 ? 'bg-amber-400 text-white' :
+                            index === 1 ? 'bg-gray-300 text-gray-700' :
+                            index === 2 ? 'bg-orange-300 text-white' :
+                            'bg-gray-200 text-gray-600'
+                          }`}>
+                            {index + 1}
+                          </span>
+                          <span className="text-sm font-medium text-gray-800 truncate max-w-[150px]">{curso.nome}</span>
+                        </div>
+                        <span className="text-sm font-bold text-blue-600">{curso.confirmadas} turma{curso.confirmadas > 1 ? 's' : ''}</span>
                       </div>
-                      <span className="text-xs font-medium text-red-600">{campus.matAcadPercent}%</span>
+                      <div className="w-full bg-gray-100 rounded-full h-4 ml-8">
+                        <div 
+                          className="bg-gradient-to-r from-blue-400 to-blue-600 h-4 rounded-full transition-all duration-500"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-red-600">{campus.matAcadAtual}</p>
-                    <p className="text-xs text-gray-500">/ {campus.matAcadMeta}</p>
-                  </div>
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
@@ -365,7 +404,6 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
                 <TableHeader className="sticky top-0 bg-gray-50">
                   <TableRow>
                     <TableHead className="font-semibold">Campus</TableHead>
-                    <TableHead className="text-center font-semibold">Turmas</TableHead>
                     <TableHead className="text-center font-semibold">Conf.</TableHead>
                     <TableHead className="text-center font-semibold">Inscritos</TableHead>
                     <TableHead className="text-center font-semibold">Mat Fin</TableHead>
@@ -376,7 +414,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
                 <TableBody>
                   {filteredCampus.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                      <TableCell colSpan={6} className="text-center py-12 text-gray-500">
                         Nenhum campus encontrado
                       </TableCell>
                     </TableRow>
@@ -385,9 +423,6 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
                       <TableRow key={campus.codCampus} className="hover:bg-gray-50">
                         <TableCell className="font-medium text-gray-800">
                           <p>{campus.nomeCampus}</p>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <span className="font-bold text-gray-700">{campus.totalTurmas}</span>
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">

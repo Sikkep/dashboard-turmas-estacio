@@ -370,7 +370,7 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="visao-meta" className="mt-0">
-            <VisaoMeta totais={displayData.totais} campusData={displayData.campusData} />
+            <VisaoMeta totais={displayData.totais} campusData={displayData.campusData} turmas={displayData.turmas} />
           </TabsContent>
 
           <TabsContent value="turmas-proximas" className="mt-0">
