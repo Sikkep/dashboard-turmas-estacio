@@ -404,11 +404,11 @@ export default function VisaoMeta({ totais, campusData, turmas }: VisaoMetaProps
                 <TableHeader className="sticky top-0 bg-gray-50">
                   <TableRow>
                     <TableHead className="font-semibold">Campus</TableHead>
-                    <TableHead className="text-center font-semibold">Conf.</TableHead>
                     <TableHead className="text-center font-semibold">Inscritos</TableHead>
                     <TableHead className="text-center font-semibold">Mat Fin</TableHead>
                     <TableHead className="text-center font-semibold">Fin Doc</TableHead>
                     <TableHead className="text-center font-semibold">Mat Acad</TableHead>
+                    <TableHead className="text-center font-semibold">Atingimento</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -425,13 +425,6 @@ export default function VisaoMeta({ totais, campusData, turmas }: VisaoMetaProps
                           <p>{campus.nomeCampus}</p>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <span className="font-bold text-emerald-600">{campus.turmasConfirmadas}</span>
-                            <span className="text-gray-400">/</span>
-                            <span className="font-bold text-red-600">{campus.turmasNaoConfirmadas}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
                           <span className="font-bold text-blue-600">{formatNumber(campus.inscritosAtual)}</span>
                         </TableCell>
                         <TableCell className="text-center">
@@ -442,6 +435,20 @@ export default function VisaoMeta({ totais, campusData, turmas }: VisaoMetaProps
                         </TableCell>
                         <TableCell className="text-center">
                           <span className="font-bold text-purple-600">{formatNumber(campus.matAcadAtual)}</span>
+                          <span className="text-gray-400 text-sm"> / {formatNumber(campus.matAcadMeta)}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full ${campus.matAcadPercent >= 90 ? 'bg-emerald-500' : campus.matAcadPercent >= 70 ? 'bg-yellow-500' : campus.matAcadPercent >= 50 ? 'bg-orange-500' : 'bg-red-500'}`}
+                                style={{ width: `${Math.min(campus.matAcadPercent, 100)}%` }}
+                              />
+                            </div>
+                            <span className={`text-sm font-bold ${campus.matAcadPercent >= 90 ? 'text-emerald-600' : campus.matAcadPercent >= 70 ? 'text-yellow-600' : campus.matAcadPercent >= 50 ? 'text-orange-600' : 'text-red-600'}`}>
+                              {campus.matAcadPercent}%
+                            </span>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -452,7 +459,7 @@ export default function VisaoMeta({ totais, campusData, turmas }: VisaoMetaProps
           </div>
 
           <div className="mt-3 text-sm text-gray-500">
-            Mostrando {filteredCampus.length} de {campusData.length} campus • Conf. = Confirmadas / Não Confirmadas
+            Mostrando {filteredCampus.length} de {campusData.length} campus
           </div>
         </CardContent>
       </Card>
