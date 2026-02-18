@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, GraduationCap, FileText, BookOpen, TrendingUp, Target, Award, AlertTriangle, CheckCircle, XCircle, Search, Building2 } from "lucide-react";
+import { Users, GraduationCap, FileText, BookOpen, TrendingUp, Target, AlertTriangle, Search, Building2 } from "lucide-react";
 
 interface TotaisData {
   inscritosAtual: number;
@@ -169,42 +169,6 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
   const matFinGap = totais.matFinMeta - totais.matFinAtual;
   const finDocGap = totais.finDocMeta - totais.finDocAtual;
   const matAcadGap = totais.matAcadMeta - totais.matAcadAtual;
-
-  // Calculate totals for filtered campus
-  const filteredTotals = useMemo(() => {
-    return filteredCampus.reduce((acc, campus) => ({
-      totalTurmas: acc.totalTurmas + campus.totalTurmas,
-      turmasConfirmadas: acc.turmasConfirmadas + campus.turmasConfirmadas,
-      turmasNaoConfirmadas: acc.turmasNaoConfirmadas + campus.turmasNaoConfirmadas,
-      inscritosAtual: acc.inscritosAtual + campus.inscritosAtual,
-      inscritosMeta: acc.inscritosMeta + campus.inscritosMeta,
-      matFinAtual: acc.matFinAtual + campus.matFinAtual,
-      matFinMeta: acc.matFinMeta + campus.matFinMeta,
-      finDocAtual: acc.finDocAtual + campus.finDocAtual,
-      finDocMeta: acc.finDocMeta + campus.finDocMeta,
-      matAcadAtual: acc.matAcadAtual + campus.matAcadAtual,
-      matAcadMeta: acc.matAcadMeta + campus.matAcadMeta,
-    }), {
-      totalTurmas: 0,
-      turmasConfirmadas: 0,
-      turmasNaoConfirmadas: 0,
-      inscritosAtual: 0,
-      inscritosMeta: 0,
-      matFinAtual: 0,
-      matFinMeta: 0,
-      finDocAtual: 0,
-      finDocMeta: 0,
-      matAcadAtual: 0,
-      matAcadMeta: 0,
-    });
-  }, [filteredCampus]);
-
-  const filteredTotalsPercent = {
-    inscritos: filteredTotals.inscritosMeta > 0 ? Math.round((filteredTotals.inscritosAtual / filteredTotals.inscritosMeta) * 100) : 0,
-    matFin: filteredTotals.matFinMeta > 0 ? Math.round((filteredTotals.matFinAtual / filteredTotals.matFinMeta) * 100) : 0,
-    finDoc: filteredTotals.finDocMeta > 0 ? Math.round((filteredTotals.finDocAtual / filteredTotals.finDocMeta) * 100) : 0,
-    matAcad: filteredTotals.matAcadMeta > 0 ? Math.round((filteredTotals.matAcadAtual / filteredTotals.matAcadMeta) * 100) : 0,
-  };
 
   return (
     <div className="space-y-6">
@@ -381,7 +345,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Dados por Campus</h3>
-                <p className="text-xs text-gray-500">{campusData.length} campus cadastrados</p>
+                <p className="text-xs text-gray-500">{campusData.length} campus • ordenado por MAT ACAD</p>
               </div>
             </div>
             <div className="relative w-64">
@@ -402,7 +366,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
                   <TableRow>
                     <TableHead className="font-semibold">Campus</TableHead>
                     <TableHead className="text-center font-semibold">Turmas</TableHead>
-                    <TableHead className="text-center font-semibold">Confirmação</TableHead>
+                    <TableHead className="text-center font-semibold">Conf.</TableHead>
                     <TableHead className="text-center font-semibold">Inscritos</TableHead>
                     <TableHead className="text-center font-semibold">Mat Fin</TableHead>
                     <TableHead className="text-center font-semibold">Fin Doc</TableHead>
@@ -410,55 +374,6 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* Total Row */}
-                  <TableRow className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-b-2 border-blue-200">
-                    <TableCell className="font-bold text-gray-800">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-blue-600" />
-                        TOTAL GERAL
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="font-bold text-gray-800">{filteredTotals.totalTurmas}</span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-3">
-                        <div className="flex items-center gap-1">
-                          <CheckCircle className="h-4 w-4 text-emerald-500" />
-                          <span className="font-bold text-emerald-600">{filteredTotals.turmasConfirmadas}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <XCircle className="h-4 w-4 text-red-500" />
-                          <span className="font-bold text-red-600">{filteredTotals.turmasNaoConfirmadas}</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-sm font-medium">{formatNumber(filteredTotals.inscritosAtual)} / {formatNumber(filteredTotals.inscritosMeta)}</span>
-                        <PercentBadge percent={filteredTotalsPercent.inscritos} />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-sm font-medium">{formatNumber(filteredTotals.matFinAtual)} / {formatNumber(filteredTotals.matFinMeta)}</span>
-                        <PercentBadge percent={filteredTotalsPercent.matFin} />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-sm font-medium">{formatNumber(filteredTotals.finDocAtual)} / {formatNumber(filteredTotals.finDocMeta)}</span>
-                        <PercentBadge percent={filteredTotalsPercent.finDoc} />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-sm font-medium">{formatNumber(filteredTotals.matAcadAtual)} / {formatNumber(filteredTotals.matAcadMeta)}</span>
-                        <PercentBadge percent={filteredTotalsPercent.matAcad} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-
                   {filteredCampus.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-12 text-gray-500">
@@ -469,53 +384,29 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
                     filteredCampus.map((campus) => (
                       <TableRow key={campus.codCampus} className="hover:bg-gray-50">
                         <TableCell className="font-medium text-gray-800">
-                          <div>
-                            <p>{campus.nomeCampus}</p>
-                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                              <span className="px-1.5 py-0.5 bg-gray-100 rounded">{campus.codCampus}</span>
-                            </div>
+                          <p>{campus.nomeCampus}</p>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span className="font-bold text-gray-700">{campus.totalTurmas}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="font-bold text-emerald-600">{campus.turmasConfirmadas}</span>
+                            <span className="text-gray-400">/</span>
+                            <span className="font-bold text-red-600">{campus.turmasNaoConfirmadas}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 font-bold text-gray-700">
-                            {campus.totalTurmas}
-                          </span>
+                          <span className="font-bold text-blue-600">{formatNumber(campus.inscritosAtual)}</span>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-3">
-                            <div className="flex items-center gap-1">
-                              <CheckCircle className="h-4 w-4 text-emerald-500" />
-                              <span className="font-medium text-emerald-600">{campus.turmasConfirmadas}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <XCircle className="h-4 w-4 text-red-500" />
-                              <span className="font-medium text-red-600">{campus.turmasNaoConfirmadas}</span>
-                            </div>
-                          </div>
+                          <span className="font-bold text-emerald-600">{formatNumber(campus.matFinAtual)}</span>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-sm">{formatNumber(campus.inscritosAtual)} / {formatNumber(campus.inscritosMeta)}</span>
-                            <PercentBadge percent={campus.inscritosPercent} />
-                          </div>
+                          <span className="font-bold text-orange-600">{formatNumber(campus.finDocAtual)}</span>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-sm">{formatNumber(campus.matFinAtual)} / {formatNumber(campus.matFinMeta)}</span>
-                            <PercentBadge percent={campus.matFinPercent} />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-sm">{formatNumber(campus.finDocAtual)} / {formatNumber(campus.finDocMeta)}</span>
-                            <PercentBadge percent={campus.finDocPercent} />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="text-sm">{formatNumber(campus.matAcadAtual)} / {formatNumber(campus.matAcadMeta)}</span>
-                            <PercentBadge percent={campus.matAcadPercent} />
-                          </div>
+                          <span className="font-bold text-purple-600">{formatNumber(campus.matAcadAtual)}</span>
                         </TableCell>
                       </TableRow>
                     ))
@@ -526,7 +417,7 @@ export default function VisaoMeta({ totais, campusData }: VisaoMetaProps) {
           </div>
 
           <div className="mt-3 text-sm text-gray-500">
-            Mostrando {filteredCampus.length} de {campusData.length} campus
+            Mostrando {filteredCampus.length} de {campusData.length} campus • Conf. = Confirmadas / Não Confirmadas
           </div>
         </CardContent>
       </Card>
