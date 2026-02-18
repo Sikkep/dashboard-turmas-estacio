@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Loader2 } from "lucide-react";
-import DashboardCards from "@/components/DashboardCards";
-import PerformanceChart from "@/components/PerformanceChart";
+import VisaoGeral from "@/components/VisaoGeral";
+import VisaoMeta from "@/components/VisaoMeta";
 import TurmasTable from "@/components/TurmasTable";
 import CampusTable from "@/components/CampusTable";
 import UploadForm from "@/components/UploadForm";
@@ -26,6 +26,8 @@ interface Totals {
   matAcadPercent: number;
   totalTurmas: number;
   turmasComDados: number;
+  turmasConfirmadas: number;
+  turmasNaoConfirmadas: number;
 }
 
 interface TurmaData {
@@ -50,6 +52,8 @@ interface TurmaData {
   matAcadAtual: number;
   matAcadMeta: number;
   matAcadPercent: number;
+  pe: number;
+  confirmado: boolean;
 }
 
 interface CampusData {
@@ -69,6 +73,8 @@ interface CampusData {
   matAcadAtual: number;
   matAcadMeta: number;
   matAcadPercent: number;
+  turmasConfirmadas: number;
+  turmasNaoConfirmadas: number;
 }
 
 interface FilterOption {
@@ -94,7 +100,6 @@ interface ApiResponse {
   message?: string;
 }
 
-// Check if running in production (Vercel)
 const isProduction = process.env.NODE_ENV === 'production';
 
 export default function Dashboard() {
@@ -103,7 +108,6 @@ export default function Dashboard() {
   const [data, setData] = useState<ApiResponse["data"] | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
 
-  // Filter states
   const [selectedCampus, setSelectedCampus] = useState("all");
   const [selectedCurso, setSelectedCurso] = useState("all");
   const [selectedTurno, setSelectedTurno] = useState("all");
@@ -113,7 +117,6 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
 
-      // Use static API in production, dynamic in development
       const apiEndpoint = isProduction ? '/api/static' : '/api/dados';
       
       const params = new URLSearchParams();
@@ -143,7 +146,7 @@ export default function Dashboard() {
   }, [selectedCampus, selectedCurso, selectedTurno]);
 
   const fetchLastSync = useCallback(async () => {
-    if (isProduction) return; // Skip in production
+    if (isProduction) return;
     
     try {
       const response = await fetch("/api/sync");
@@ -166,14 +169,11 @@ export default function Dashboard() {
     fetchLastSync();
   }, [fetchData, fetchLastSync]);
 
-  // Client-side filtering for production
   const filteredData = useMemo(() => {
     if (!data) return null;
     
-    // In development, return data as-is (server handles filtering)
     if (!isProduction) return data;
     
-    // In production with no filters, return original data with correct totals
     if (selectedCampus === "all" && selectedCurso === "all" && selectedTurno === "all") {
       return data;
     }
@@ -192,7 +192,6 @@ export default function Dashboard() {
       filteredTurmas = filteredTurmas.filter(t => t.codTurno === selectedTurno);
     }
 
-    // Recalculate totals only when filtering
     const totais = {
       inscritosAtual: 0, inscritosMeta: 0, inscritosPercent: 0,
       matFinAtual: 0, matFinMeta: 0, matFinPercent: 0,
@@ -200,6 +199,8 @@ export default function Dashboard() {
       matAcadAtual: 0, matAcadMeta: 0, matAcadPercent: 0,
       totalTurmas: filteredTurmas.length,
       turmasComDados: filteredTurmas.filter(t => t.temDados).length,
+      turmasConfirmadas: 0,
+      turmasNaoConfirmadas: 0,
     };
 
     filteredTurmas.forEach(t => {
@@ -211,9 +212,12 @@ export default function Dashboard() {
       totais.finDocMeta += t.finDocMeta;
       totais.matAcadAtual += t.matAcadAtual;
       totais.matAcadMeta += t.matAcadMeta;
+      if (t.pe > 0) {
+        if (t.confirmado) totais.turmasConfirmadas++;
+        else totais.turmasNaoConfirmadas++;
+      }
     });
 
-    // Round totals
     totais.inscritosMeta = Math.round(totais.inscritosMeta);
     totais.matFinMeta = Math.round(totais.matFinMeta);
     totais.finDocMeta = Math.round(totais.finDocMeta);
@@ -273,7 +277,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 md:px-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
@@ -293,12 +296,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto p-4 md:p-6 space-y-6">
-        {/* Summary Cards */}
-        <DashboardCards totais={displayData.totais} />
-
-        {/* Filters */}
         <FilterBar
           filtros={data.filtros}
           selectedCampus={selectedCampus}
@@ -309,16 +307,22 @@ export default function Dashboard() {
           onTurnoChange={setSelectedTurno}
         />
 
-        {/* Chart */}
-        <PerformanceChart totais={displayData.totais} />
-
-        {/* Tabs for detailed views */}
-        <Tabs defaultValue="campus" className="space-y-4">
+        <Tabs defaultValue="visao-geral" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
+            <TabsTrigger value="visao-meta">Atingimento de Meta</TabsTrigger>
             <TabsTrigger value="campus">Por Campus</TabsTrigger>
             <TabsTrigger value="turmas">Por Turma</TabsTrigger>
             {!isProduction && <TabsTrigger value="upload">Upload</TabsTrigger>}
           </TabsList>
+
+          <TabsContent value="visao-geral">
+            <VisaoGeral totais={displayData.totais} turmas={displayData.turmas} />
+          </TabsContent>
+
+          <TabsContent value="visao-meta">
+            <VisaoMeta totais={displayData.totais} campusData={displayData.campusData} />
+          </TabsContent>
 
           <TabsContent value="campus">
             <CampusTable campusData={displayData.campusData} />

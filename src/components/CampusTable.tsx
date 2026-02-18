@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, CheckCircle, XCircle } from "lucide-react";
 
 interface CampusData {
   codCampus: string;
@@ -31,6 +31,8 @@ interface CampusData {
   matAcadAtual: number;
   matAcadMeta: number;
   matAcadPercent: number;
+  turmasConfirmadas: number;
+  turmasNaoConfirmadas: number;
 }
 
 interface CampusTableProps {
@@ -78,6 +80,7 @@ export default function CampusTable({ campusData }: CampusTableProps) {
               <TableRow>
                 <TableHead>Campus</TableHead>
                 <TableHead className="text-center">Turmas</TableHead>
+                <TableHead className="text-center">Turmas Confirmadas</TableHead>
                 <TableHead className="text-center">Inscritos</TableHead>
                 <TableHead className="text-center">Mat. Fin.</TableHead>
                 <TableHead className="text-center">Fin. Doc.</TableHead>
@@ -87,7 +90,7 @@ export default function CampusTable({ campusData }: CampusTableProps) {
             <TableBody>
               {filteredData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     Nenhum campus encontrado
                   </TableCell>
                 </TableRow>
@@ -104,6 +107,18 @@ export default function CampusTable({ campusData }: CampusTableProps) {
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline">{campus.totalTurmas}</Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle className="h-3 w-3" />
+                          <span className="text-sm font-medium">{campus.turmasConfirmadas}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-red-600">
+                          <XCircle className="h-3 w-3" />
+                          <span className="text-sm font-medium">{campus.turmasNaoConfirmadas}</span>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">

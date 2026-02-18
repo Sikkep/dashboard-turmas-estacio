@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, ArrowUpDown } from "lucide-react";
+import { Search, ArrowUpDown, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface TurmaData {
@@ -37,6 +37,8 @@ interface TurmaData {
   matAcadAtual: number;
   matAcadMeta: number;
   matAcadPercent: number;
+  pe: number;
+  confirmado: boolean;
 }
 
 interface TurmasTableProps {
@@ -59,7 +61,27 @@ function getStatusBadge(percent: number) {
   return <Badge className="bg-red-500 hover:bg-red-600">Ruim</Badge>;
 }
 
-type SortField = "nomeCampus" | "nomeCurso" | "turno" | "inscritosPercent" | "matFinPercent" | "finDocPercent" | "matAcadPercent";
+function getConfirmacaoBadge(confirmado: boolean, pe: number) {
+  if (pe === 0) {
+    return <Badge variant="secondary">Sem PE</Badge>;
+  }
+  if (confirmado) {
+    return (
+      <Badge className="bg-green-500 hover:bg-green-600">
+        <CheckCircle className="h-3 w-3 mr-1" />
+        Confirmada
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="bg-red-500 hover:bg-red-600">
+      <XCircle className="h-3 w-3 mr-1" />
+      Não Confirmada
+    </Badge>
+  );
+}
+
+type SortField = "nomeCampus" | "nomeCurso" | "turno" | "inscritosPercent" | "matFinPercent" | "finDocPercent" | "matAcadPercent" | "pe" | "confirmado";
 type SortDirection = "asc" | "desc";
 
 function SortButton({ 
@@ -108,6 +130,8 @@ export default function TurmasTable({ turmas }: TurmasTableProps) {
       
       if (sortField === "nomeCampus" || sortField === "nomeCurso" || sortField === "turno") {
         comparison = a[sortField].localeCompare(b[sortField]);
+      } else if (sortField === "confirmado") {
+        comparison = (a.confirmado ? 1 : 0) - (b.confirmado ? 1 : 0);
       } else {
         comparison = a[sortField] - b[sortField];
       }
@@ -155,13 +179,16 @@ export default function TurmasTable({ turmas }: TurmasTableProps) {
                 <TableHead className="text-center">Mat. Fin.</TableHead>
                 <TableHead className="text-center">Fin. Doc.</TableHead>
                 <TableHead className="text-center">Mat. Acad.</TableHead>
-                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center">PE</TableHead>
+                <TableHead className="text-center">
+                  <SortButton field="confirmado" label="Status" currentField={sortField} direction={sortDirection} onSort={handleSort} />
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTurmas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={9} className="text-center py-8">
                     Nenhuma turma encontrada
                   </TableCell>
                 </TableRow>
@@ -179,11 +206,7 @@ export default function TurmasTable({ turmas }: TurmasTableProps) {
                       {turma.temDados ? (
                         <div className="space-y-1">
                           <div className="text-sm">
-                            {formatNumber(turma.inscritosAtual)} /{" "}
-                            {formatNumber(turma.inscritosMeta)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {turma.inscritosPercent}%
+                            {formatNumber(turma.inscritosAtual)}
                           </div>
                         </div>
                       ) : (
@@ -194,11 +217,23 @@ export default function TurmasTable({ turmas }: TurmasTableProps) {
                       {turma.temDados ? (
                         <div className="space-y-1">
                           <div className="text-sm">
-                            {formatNumber(turma.matFinAtual)} /{" "}
-                            {formatNumber(turma.matFinMeta)}
+                            {formatNumber(turma.matFinAtual)}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {turma.matFinPercent}%
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {turma.temDados ? (
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium">
+                            {formatNumber(turma.finDocAtual)}
+                            {turma.pe > 0 && (
+                              <span className="text-xs text-muted-foreground ml-1">
+                                /{turma.pe}
+                              </span>
+                            )}
                           </div>
                         </div>
                       ) : (
@@ -209,11 +244,7 @@ export default function TurmasTable({ turmas }: TurmasTableProps) {
                       {turma.temDados ? (
                         <div className="space-y-1">
                           <div className="text-sm">
-                            {formatNumber(turma.finDocAtual)} /{" "}
-                            {formatNumber(turma.finDocMeta)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {turma.finDocPercent}%
+                            {formatNumber(turma.matAcadAtual)}
                           </div>
                         </div>
                       ) : (
@@ -221,26 +252,14 @@ export default function TurmasTable({ turmas }: TurmasTableProps) {
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      {turma.temDados ? (
-                        <div className="space-y-1">
-                          <div className="text-sm">
-                            {formatNumber(turma.matAcadAtual)} /{" "}
-                            {formatNumber(turma.matAcadMeta)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {turma.matAcadPercent}%
-                          </div>
-                        </div>
+                      {turma.pe > 0 ? (
+                        <span className="font-medium">{turma.pe}</span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      {turma.temDados ? (
-                        getStatusBadge(turma.matFinPercent)
-                      ) : (
-                        <Badge variant="secondary">Sem dados</Badge>
-                      )}
+                      {getConfirmacaoBadge(turma.confirmado, turma.pe)}
                     </TableCell>
                   </TableRow>
                 ))

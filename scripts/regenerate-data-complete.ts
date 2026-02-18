@@ -61,6 +61,11 @@ interface TurmaPortfolio {
   nomeMunicipio: string | null;
 }
 
+interface PEData {
+  nomeCurso: string;
+  pe: number;
+}
+
 function readPortfolioExcel(filePath: string): TurmaPortfolio[] {
   const workbook = XLSX.readFile(filePath);
   const sheetName = workbook.SheetNames[0];
@@ -81,6 +86,24 @@ function readPortfolioExcel(filePath: string): TurmaPortfolio[] {
     uf: row['UF'] ? String(row['UF']) : null,
     nomeMunicipio: row['NOME MUNICIPIO'] ? String(row['NOME MUNICIPIO']) : null,
   }));
+}
+
+function readPEExcel(filePath: string): Map<string, number> {
+  const workbook = XLSX.readFile(filePath);
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(sheet) as PEData[];
+  
+  const peMap = new Map<string, number>();
+  data.forEach(row => {
+    const nomeCurso = row['NOME DO CURSO']?.toUpperCase().trim() || '';
+    const pe = Number(row['P.E.']) || 0;
+    if (nomeCurso && pe > 0) {
+      peMap.set(nomeCurso, pe);
+    }
+  });
+  
+  return peMap;
 }
 
 function readCAPCSV(filePath: string): { dadosAtuais: DadosCAPRow[], metas: DadosCAPRow[] } {
@@ -114,7 +137,6 @@ function readCAPCSV(filePath: string): { dadosAtuais: DadosCAPRow[], metas: Dado
 
     const codTurno = cleanCodeValue(row['COD_TURNO'] || '');
     
-    // Skip turno 0 (INTEGRAL - PÓS) for dados atuais
     if (fDesistente === 0 && codTurno === '0') {
       continue;
     }
@@ -140,7 +162,6 @@ function readCAPCSV(filePath: string): { dadosAtuais: DadosCAPRow[], metas: Dado
       dadosAtuais.push(dados);
     }
     
-    // Metas are in rows with codTurno = 0
     if (codTurno === '0' && (dados.inscritosMetaFech > 0 || dados.matFinMetaFech > 0)) {
       metas.push(dados);
     }
@@ -180,7 +201,6 @@ function aggregateDadosAtuais(rows: DadosCAPRow[]): Map<string, any> {
   return aggregated;
 }
 
-// Sum all metas by campus+curso
 function aggregateMetas(rows: DadosCAPRow[]): Map<string, any> {
   const aggregated = new Map<string, any>();
 
@@ -208,7 +228,6 @@ function aggregateMetas(rows: DadosCAPRow[]): Map<string, any> {
   return aggregated;
 }
 
-// Map turno code to name
 function getTurnoName(codTurno: string): string {
   const turnos: Record<string, string> = {
     '1': 'MANHÃ',
@@ -219,10 +238,46 @@ function getTurnoName(codTurno: string): string {
   return turnos[codTurno] || 'INDEFINIDO';
 }
 
+// Normalize course name for matching
+function normalizeCourseName(name: string): string {
+  return name.toUpperCase().trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^A-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Find PE for a course name
+function findPE(nomeCurso: string, peMap: Map<string, number>): number {
+  const normalized = normalizeCourseName(nomeCurso);
+  
+  // Direct match
+  for (const [peName, pe] of peMap) {
+    if (normalizeCourseName(peName) === normalized) {
+      return pe;
+    }
+  }
+  
+  // Partial match
+  for (const [peName, pe] of peMap) {
+    if (normalized.includes(normalizeCourseName(peName)) || 
+        normalizeCourseName(peName).includes(normalized)) {
+      return pe;
+    }
+  }
+  
+  return 0;
+}
+
 async function main() {
   console.log('Lendo portfolio...');
   const portfolio = readPortfolioExcel('/home/z/my-project/upload/portfolio.xlsx');
   console.log('Portfolio turmas:', portfolio.length);
+  
+  console.log('\nLendo PE CT.xlsx...');
+  const peMap = readPEExcel('/home/z/my-project/upload/PE CT.xlsx');
+  console.log('Cursos com PE:', peMap.size);
   
   // Create lookup map for portfolio
   const portfolioMap = new Map<string, TurmaPortfolio>();
@@ -242,20 +297,21 @@ async function main() {
   console.log('\nTurmas com dados:', dadosAggregated.size);
   console.log('Combinações com metas:', metasAggregated.size);
   
-  // Calculate totals - current values are summed per turma
+  // Count turnos per campus+curso for proportional meta distribution
+  const turnosPorCurso = new Map<string, number>();
+  for (const [key, data] of dadosAggregated) {
+    const cursoKey = `${data.codCampus}_${data.codCurso}`;
+    turnosPorCurso.set(cursoKey, (turnosPorCurso.get(cursoKey) || 0) + 1);
+  }
+  
+  const turmasData: any[] = [];
+  const processedKeys = new Set<string>();
+  
+  // Calculate totals
   let totalInscritosAtual = 0;
   let totalMatFinAtual = 0;
   let totalFinDocAtual = 0;
   let totalMatAcadAtual = 0;
-  
-  for (const [key, data] of dadosAggregated) {
-    totalInscritosAtual += data.inscritosAtual;
-    totalMatFinAtual += data.matFinAtual;
-    totalFinDocAtual += data.finDocAtual;
-    totalMatAcadAtual += data.matAcadAtual;
-  }
-  
-  // Calculate totals - metas are summed once per campus+curso
   let totalInscritosMeta = 0;
   let totalMatFinMeta = 0;
   let totalFinDocMeta = 0;
@@ -268,88 +324,75 @@ async function main() {
     totalMatAcadMeta += meta.matAcadMeta;
   }
   
-  // Count turnos per campus+curso for proportional meta distribution
-  const turnosPorCurso = new Map<string, number>();
-  for (const [key, data] of dadosAggregated) {
-    const cursoKey = `${data.codCampus}_${data.codCurso}`;
-    turnosPorCurso.set(cursoKey, (turnosPorCurso.get(cursoKey) || 0) + 1);
-  }
+  // Track confirmed turmas
+  let turmasConfirmadas = 0;
+  let turmasNaoConfirmadas = 0;
   
-  const turmasData: any[] = [];
-  const processedKeys = new Set<string>();
-  
-  // Process all CAP data (including those not in portfolio)
+  // Process all CAP data
   for (const [key, data] of dadosAggregated) {
+    totalInscritosAtual += data.inscritosAtual;
+    totalMatFinAtual += data.matFinAtual;
+    totalFinDocAtual += data.finDocAtual;
+    totalMatAcadAtual += data.matAcadAtual;
+    
     const metaKey = `${data.codCampus}_${data.codCurso}`;
     const meta = metasAggregated.get(metaKey);
     const numTurnos = turnosPorCurso.get(metaKey) || 1;
     
-    // Divide meta proportionally among turnos (keep decimals for accurate sum)
     const inscritosMeta = meta ? meta.inscritosMeta / numTurnos : 0;
     const matFinMeta = meta ? meta.matFinMeta / numTurnos : 0;
     const finDocMeta = meta ? meta.finDocMeta / numTurnos : 0;
     const matAcadMeta = meta ? meta.matAcadMeta / numTurnos : 0;
     
+    // Find PE for this course
+    const pe = findPE(data.nomCurso, peMap);
+    const confirmado = pe > 0 && data.finDocAtual >= pe;
+    
+    if (pe > 0) {
+      if (confirmado) {
+        turmasConfirmadas++;
+      } else {
+        turmasNaoConfirmadas++;
+      }
+    }
+    
     const turmaMatch = portfolioMap.get(key);
     
-    if (turmaMatch) {
-      turmasData.push({
-        id: `turma_${key}`,
-        sku: turmaMatch.sku,
-        codCampus: data.codCampus,
-        nomeCampus: turmaMatch.nomeCampus,
-        codCurso: data.codCurso,
-        nomeCurso: turmaMatch.nomeCurso,
-        codTurno: data.codTurno,
-        turno: turmaMatch.turno,
-        tipoCurso: turmaMatch.tipoCurso,
-        areaConhecimento: turmaMatch.areaConhecimento,
-        uf: turmaMatch.uf,
-        nomeMunicipio: turmaMatch.nomeMunicipio,
-        temDados: true,
-        inscritosAtual: data.inscritosAtual,
-        inscritosMeta,
-        inscritosPercent: inscritosMeta > 0 ? Math.round((data.inscritosAtual / inscritosMeta) * 100) : 0,
-        matFinAtual: data.matFinAtual,
-        matFinMeta,
-        matFinPercent: matFinMeta > 0 ? Math.round((data.matFinAtual / matFinMeta) * 100) : 0,
-        finDocAtual: data.finDocAtual,
-        finDocMeta,
-        finDocPercent: finDocMeta > 0 ? Math.round((data.finDocAtual / finDocMeta) * 100) : 0,
-        matAcadAtual: data.matAcadAtual,
-        matAcadMeta,
-        matAcadPercent: matAcadMeta > 0 ? Math.round((data.matAcadAtual / matAcadMeta) * 100) : 0,
-      });
-    } else {
-      // CAP data not in portfolio - create entry with CAP info
-      turmasData.push({
-        id: `turma_${key}`,
-        sku: `${data.codCampus}${data.codCurso}${data.codTurno}`,
-        codCampus: data.codCampus,
-        nomeCampus: data.nomCampus || 'NÃO INFORMADO',
-        codCurso: data.codCurso,
-        nomeCurso: data.nomCurso || 'NÃO INFORMADO',
-        codTurno: data.codTurno,
-        turno: data.nomTurno || getTurnoName(data.codTurno),
-        tipoCurso: null,
-        areaConhecimento: null,
-        uf: null,
-        nomeMunicipio: null,
-        temDados: true,
-        inscritosAtual: data.inscritosAtual,
-        inscritosMeta,
-        inscritosPercent: inscritosMeta > 0 ? Math.round((data.inscritosAtual / inscritosMeta) * 100) : 0,
-        matFinAtual: data.matFinAtual,
-        matFinMeta,
-        matFinPercent: matFinMeta > 0 ? Math.round((data.matFinAtual / matFinMeta) * 100) : 0,
-        finDocAtual: data.finDocAtual,
-        finDocMeta,
-        finDocPercent: finDocMeta > 0 ? Math.round((data.finDocAtual / finDocMeta) * 100) : 0,
-        matAcadAtual: data.matAcadAtual,
-        matAcadMeta,
-        matAcadPercent: matAcadMeta > 0 ? Math.round((data.matAcadAtual / matAcadMeta) * 100) : 0,
-      });
-    }
+    const turmaData = {
+      id: `turma_${key}`,
+      sku: turmaMatch?.sku || `${data.codCampus}${data.codCurso}${data.codTurno}`,
+      codCampus: data.codCampus,
+      nomeCampus: turmaMatch?.nomeCampus || data.nomCampus || 'NÃO INFORMADO',
+      codCurso: data.codCurso,
+      nomeCurso: turmaMatch?.nomeCurso || data.nomCurso || 'NÃO INFORMADO',
+      codTurno: data.codTurno,
+      turno: turmaMatch?.turno || data.nomTurno || getTurnoName(data.codTurno),
+      tipoCurso: turmaMatch?.tipoCurso || null,
+      areaConhecimento: turmaMatch?.areaConhecimento || null,
+      uf: turmaMatch?.uf || null,
+      nomeMunicipio: turmaMatch?.nomeMunicipio || null,
+      temDados: true,
+      // Realizado
+      inscritosAtual: data.inscritosAtual,
+      matFinAtual: data.matFinAtual,
+      finDocAtual: data.finDocAtual,
+      matAcadAtual: data.matAcadAtual,
+      // Meta
+      inscritosMeta,
+      matFinMeta,
+      finDocMeta,
+      matAcadMeta,
+      // PE e confirmação
+      pe,
+      confirmado,
+      // Percentuais
+      inscritosPercent: inscritosMeta > 0 ? Math.round((data.inscritosAtual / inscritosMeta) * 100) : 0,
+      matFinPercent: matFinMeta > 0 ? Math.round((data.matFinAtual / matFinMeta) * 100) : 0,
+      finDocPercent: finDocMeta > 0 ? Math.round((data.finDocAtual / finDocMeta) * 100) : 0,
+      matAcadPercent: matAcadMeta > 0 ? Math.round((data.matAcadAtual / matAcadMeta) * 100) : 0,
+    };
+    
+    turmasData.push(turmaData);
     processedKeys.add(key);
   }
   
@@ -357,10 +400,12 @@ async function main() {
   for (const turma of portfolio) {
     const key = `${turma.codCampus}_${turma.codCurso}_${turma.codTurno}`;
     if (!processedKeys.has(key)) {
-      // Check if there's a meta for this campus+curso
       const metaKey = `${turma.codCampus}_${turma.codCurso}`;
       const meta = metasAggregated.get(metaKey);
       const numTurnos = turnosPorCurso.get(metaKey) || 1;
+      
+      const pe = findPE(turma.nomeCurso, peMap);
+      const confirmado = pe > 0 && 0 >= pe; // Will be false since 0 < pe
       
       turmasData.push({
         id: `turma_${key}`,
@@ -377,37 +422,25 @@ async function main() {
         nomeMunicipio: turma.nomeMunicipio,
         temDados: false,
         inscritosAtual: 0,
-        inscritosMeta: meta ? meta.inscritosMeta / numTurnos : 0,
-        inscritosPercent: 0,
         matFinAtual: 0,
-        matFinMeta: meta ? meta.matFinMeta / numTurnos : 0,
-        matFinPercent: 0,
         finDocAtual: 0,
-        finDocMeta: meta ? meta.finDocMeta / numTurnos : 0,
-        finDocPercent: 0,
         matAcadAtual: 0,
+        inscritosMeta: meta ? meta.inscritosMeta / numTurnos : 0,
+        matFinMeta: meta ? meta.matFinMeta / numTurnos : 0,
+        finDocMeta: meta ? meta.finDocMeta / numTurnos : 0,
         matAcadMeta: meta ? meta.matAcadMeta / numTurnos : 0,
+        pe,
+        confirmado: false,
+        inscritosPercent: 0,
+        matFinPercent: 0,
+        finDocPercent: 0,
         matAcadPercent: 0,
       });
       processedKeys.add(key);
     }
   }
   
-  console.log('\n=== TOTAIS ===');
-  console.log('Inscritos:', totalInscritosAtual, '/', Math.round(totalInscritosMeta * 100) / 100);
-  console.log('Mat Fin:', totalMatFinAtual, '/', Math.round(totalMatFinMeta * 100) / 100);
-  console.log('Fin Doc:', totalFinDocAtual, '/', Math.round(totalFinDocMeta * 100) / 100);
-  console.log('Mat Acad:', totalMatAcadAtual, '/', Math.round(totalMatAcadMeta * 100) / 100);
-  
-  const inscritosPercent = totalInscritosMeta > 0 ? Math.round((totalInscritosAtual / totalInscritosMeta) * 100) : 0;
-  const matFinPercent = totalMatFinMeta > 0 ? Math.round((totalMatFinAtual / totalMatFinMeta) * 100) : 0;
-  const finDocPercent = totalFinDocMeta > 0 ? Math.round((totalFinDocAtual / totalFinDocMeta) * 100) : 0;
-  const matAcadPercent = totalMatAcadMeta > 0 ? Math.round((totalMatAcadAtual / totalMatAcadMeta) * 100) : 0;
-  
-  console.log('\nPercentuais:', inscritosPercent + '%', matFinPercent + '%', finDocPercent + '%', matAcadPercent + '%');
-  console.log('Total turmas:', turmasData.length);
-  
-  // Generate campus data
+  // Generate campus data with mat_acad meta tracking
   const campusMap = new Map<string, any>();
   
   turmasData.forEach(t => {
@@ -425,6 +458,8 @@ async function main() {
         finDocMeta: 0,
         matAcadAtual: 0,
         matAcadMeta: 0,
+        turmasConfirmadas: 0,
+        turmasNaoConfirmadas: 0,
       });
     }
     
@@ -439,6 +474,10 @@ async function main() {
     campus.finDocMeta += t.finDocMeta;
     campus.matAcadAtual += t.matAcadAtual;
     campus.matAcadMeta += t.matAcadMeta;
+    if (t.pe > 0) {
+      if (t.confirmado) campus.turmasConfirmadas++;
+      else campus.turmasNaoConfirmadas++;
+    }
   });
   
   const campusData = [...campusMap.values()].map(c => ({
@@ -469,6 +508,22 @@ async function main() {
     label: turmasData.find(t => t.codTurno === cod)?.turno || cod,
   }));
   
+  const inscritosPercent = totalInscritosMeta > 0 ? Math.round((totalInscritosAtual / totalInscritosMeta) * 100) : 0;
+  const matFinPercent = totalMatFinMeta > 0 ? Math.round((totalMatFinAtual / totalMatFinMeta) * 100) : 0;
+  const finDocPercent = totalFinDocMeta > 0 ? Math.round((totalFinDocAtual / totalFinDocMeta) * 100) : 0;
+  const matAcadPercent = totalMatAcadMeta > 0 ? Math.round((totalMatAcadAtual / totalMatAcadMeta) * 100) : 0;
+  
+  console.log('\n=== TOTAIS ===');
+  console.log('Inscritos:', totalInscritosAtual, '/', Math.round(totalInscritosMeta), '(', inscritosPercent + '% )');
+  console.log('Mat Fin:', totalMatFinAtual, '/', Math.round(totalMatFinMeta), '(', matFinPercent + '% )');
+  console.log('Fin Doc:', totalFinDocAtual, '/', Math.round(totalFinDocMeta), '(', finDocPercent + '% )');
+  console.log('Mat Acad:', totalMatAcadAtual, '/', Math.round(totalMatAcadMeta), '(', matAcadPercent + '% )');
+  
+  console.log('\n=== CONFIRMAÇÃO DE TURMAS ===');
+  console.log('Turmas Confirmadas:', turmasConfirmadas);
+  console.log('Turmas Não Confirmadas:', turmasNaoConfirmadas);
+  console.log('Total com PE:', turmasConfirmadas + turmasNaoConfirmadas);
+  
   const dashboardData = {
     totais: {
       inscritosAtual: totalInscritosAtual,
@@ -485,6 +540,9 @@ async function main() {
       matFinPercent,
       finDocPercent,
       matAcadPercent,
+      // Confirmação
+      turmasConfirmadas,
+      turmasNaoConfirmadas,
     },
     turmas: turmasData,
     campusData,
