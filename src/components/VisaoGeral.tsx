@@ -459,10 +459,7 @@ export default function VisaoGeral({ totais, turmas }: VisaoGeralProps) {
                         <TableCell className="text-center">{turma.temDados ? formatNumber(turma.matFinAtual) : '-'}</TableCell>
                         <TableCell className="text-center">
                           {turma.temDados ? (
-                            <span>
-                              {formatNumber(turma.finDocAtual)}
-                              {turma.pe > 0 && <span className="text-gray-400">/{turma.pe}</span>}
-                            </span>
+                            <span className="font-bold text-orange-600">{formatNumber(turma.finDocAtual)}</span>
                           ) : '-'}
                         </TableCell>
                         <TableCell className="text-center">{turma.temDados ? formatNumber(turma.matAcadAtual) : '-'}</TableCell>
