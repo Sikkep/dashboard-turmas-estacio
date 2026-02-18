@@ -187,17 +187,16 @@ export default function TurmasProximas({ turmas }: TurmasProximasProps) {
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-gray-800 truncate">{turma.nomeCurso}</p>
-                            <p className="text-xs text-gray-500 truncate">{turma.nomeCampus} - {turma.turno}</p>
+                            <p className="text-xs text-gray-500">{turma.turno}</p>
+                            <p className="text-xs text-gray-400 truncate">{turma.nomeCampus}</p>
                           </div>
-                          <div className="text-right ml-2">
+                          <div className="text-right ml-2 flex-shrink-0">
                             <div className="flex items-center gap-1 justify-end">
-                              <span className="text-xs text-gray-500">FIN DOC:</span>
-                              <span className="text-lg font-bold text-amber-600">{turma.finDocAtual}</span>
+                              <span className="text-xl font-bold text-amber-600">{turma.finDocAtual}</span>
+                              <span className="text-gray-400">/</span>
+                              <span className="text-xl text-gray-600">{turma.pe}</span>
                             </div>
-                            <div className="flex items-center gap-1 justify-end">
-                              <span className="text-xs text-gray-500">PE:</span>
-                              <span className="text-lg text-gray-600">{turma.pe}</span>
-                            </div>
+                            <p className="text-xs text-gray-500">FIN DOC/PE</p>
                           </div>
                         </div>
                       </div>
