@@ -68,28 +68,11 @@ export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
 
   // Calculate totals
   const totais = useMemo(() => {
-    const totalFinDoc = filteredTurmas.reduce((acc, t) => acc + t.finDocAtual, 0);
-    const totalMatAcad = filteredTurmas.reduce((acc, t) => acc + t.matAcadAtual, 0);
-    const totalGap = filteredTurmas.reduce((acc, t) => acc + t.gap, 0);
+    const totalFinDoc = turmasComGap.reduce((acc, t) => acc + t.finDocAtual, 0);
+    const totalMatAcad = turmasComGap.reduce((acc, t) => acc + t.matAcadAtual, 0);
+    const totalGap = turmasComGap.reduce((acc, t) => acc + t.gap, 0);
     return { totalFinDoc, totalMatAcad, totalGap };
-  }, [filteredTurmas]);
-
-  // Agrupar por tamanho do gap
-  const turmasPorGap = useMemo(() => {
-    const grupos: Record<string, TurmaData[]> = {
-      "Critico (10+)": [],
-      "Alto (5-9)": [],
-      "Médio (3-4)": [],
-      "Baixo (1-2)": [],
-    };
-    filteredTurmas.forEach((turma) => {
-      if (turma.gap >= 10) grupos["Critico (10+)"].push(turma);
-      else if (turma.gap >= 5) grupos["Alto (5-9)"].push(turma);
-      else if (turma.gap >= 3) grupos["Médio (3-4)"].push(turma);
-      else grupos["Baixo (1-2)"].push(turma);
-    });
-    return grupos;
-  }, [filteredTurmas]);
+  }, [turmasComGap]);
 
   return (
     <div className="space-y-6">
@@ -159,72 +142,6 @@ export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Groups by Gap Size */}
-      {Object.keys(turmasPorGap).length > 0 && (
-        <div className="space-y-4">
-          {["Critico (10+)", "Alto (5-9)", "Médio (3-4)", "Baixo (1-2)"].map((nivel) => {
-            const turmasGrupo = turmasPorGap[nivel];
-            if (!turmasGrupo || turmasGrupo.length === 0) return null;
-
-            const colors = {
-              "Critico (10+)": "from-red-50 to-red-100 border-red-300",
-              "Alto (5-9)": "from-orange-50 to-orange-100 border-orange-300",
-              "Médio (3-4)": "from-yellow-50 to-yellow-100 border-yellow-300",
-              "Baixo (1-2)": "from-green-50 to-green-100 border-green-300",
-            };
-
-            const badgeColors = {
-              "Critico (10+)": "bg-red-500",
-              "Alto (5-9)": "bg-orange-500",
-              "Médio (3-4)": "bg-yellow-500",
-              "Baixo (1-2)": "bg-green-500",
-            };
-
-            const totalGapGrupo = turmasGrupo.reduce((acc, t) => acc + t.gap, 0);
-
-            return (
-              <Card key={nivel} className={`border-0 shadow-md bg-gradient-to-br ${colors[nivel]}`}>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Badge className={`${badgeColors[nivel]} text-white`}>
-                      {nivel}
-                    </Badge>
-                    <span className="text-sm text-gray-600">
-                      {turmasGrupo.length} turma{turmasGrupo.length > 1 ? "s" : ""} • Gap total: {totalGapGrupo}
-                    </span>
-                  </div>
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {turmasGrupo.map((turma) => (
-                      <div
-                        key={turma.id}
-                        className="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition-shadow"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-800 truncate">{turma.nomeCurso}</p>
-                            <p className="text-xs text-gray-500">{turma.turno}</p>
-                            <p className="text-xs text-gray-400 truncate">{turma.nomeCampus}</p>
-                          </div>
-                          <div className="text-right ml-2 flex-shrink-0">
-                            <p className="text-lg">
-                              <span className="font-bold text-red-600">{turma.gap}</span>
-                              <span className="text-xs text-gray-500 ml-1">gap</span>
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              <span className="text-blue-600">{turma.finDocAtual}</span> FIN / <span className="text-emerald-600">{turma.matAcadAtual}</span> ACAD
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
 
       {/* Tabela completa */}
       <Card className="border-0 shadow-md bg-white">
