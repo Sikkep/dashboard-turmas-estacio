@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, GraduationCap, Calendar, RefreshCw } from "lucide-react";
 import VisaoGeral from "@/components/VisaoGeral";
 import VisaoMeta from "@/components/VisaoMeta";
 import TurmasTable from "@/components/TurmasTable";
@@ -233,10 +233,16 @@ export default function Dashboard() {
 
   if (loading && !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Carregando dados...</span>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600" />
+            <GraduationCap className="absolute inset-0 m-auto h-6 w-6 text-blue-600" />
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-medium text-gray-700">Carregando dados...</p>
+            <p className="text-sm text-gray-500">Aguarde enquanto preparamos seu dashboard</p>
+          </div>
         </div>
       </div>
     );
@@ -244,8 +250,8 @@ export default function Dashboard() {
 
   if (error && !data) {
     return (
-      <div className="container mx-auto p-4 md:p-6">
-        <Alert variant="destructive">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erro</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
@@ -261,8 +267,8 @@ export default function Dashboard() {
 
   if (!data || !filteredData) {
     return (
-      <div className="container mx-auto p-4 md:p-6">
-        <Alert>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100 flex items-center justify-center p-4">
+        <Alert className="max-w-md">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Sem dados</AlertTitle>
           <AlertDescription>
@@ -276,27 +282,46 @@ export default function Dashboard() {
   const displayData = filteredData;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
+      {/* Header */}
+      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 md:px-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Dashboard - Desempenho Turmas Estácio
-              </h1>
-              <p className="text-muted-foreground">
-                Acompanhamento de desempenho das turmas - Período 2026.1
-              </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                <GraduationCap className="h-7 w-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+                  Dashboard Turmas Estácio
+                </h1>
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Calendar className="h-4 w-4" />
+                  <span>Período 2026.1</span>
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {displayData.totais.turmasComDados} de {displayData.totais.totalTurmas} turmas com dados
-              {lastSync && <span className="ml-2">• Atualizado: {new Date(lastSync).toLocaleString('pt-BR')}</span>}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200">
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-sm font-medium text-blue-700">
+                  {displayData.totais.turmasComDados} de {displayData.totais.totalTurmas} turmas
+                </span>
+              </div>
+              {lastSync && (
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <RefreshCw className="h-3 w-3" />
+                  <span>Atualizado: {new Date(lastSync).toLocaleString('pt-BR')}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="container mx-auto p-4 md:p-6 space-y-6">
+        {/* Filter Bar */}
         <FilterBar
           filtros={data.filtros}
           selectedCampus={selectedCampus}
@@ -307,38 +332,77 @@ export default function Dashboard() {
           onTurnoChange={setSelectedTurno}
         />
 
+        {/* Tabs */}
         <Tabs defaultValue="visao-geral" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
-            <TabsTrigger value="visao-meta">Atingimento de Meta</TabsTrigger>
-            <TabsTrigger value="campus">Por Campus</TabsTrigger>
-            <TabsTrigger value="turmas">Por Turma</TabsTrigger>
-            {!isProduction && <TabsTrigger value="upload">Upload</TabsTrigger>}
-          </TabsList>
+          <div className="bg-white rounded-2xl p-1.5 shadow-sm border inline-flex">
+            <TabsList className="bg-transparent gap-1">
+              <TabsTrigger 
+                value="visao-geral" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
+              >
+                Visão Geral
+              </TabsTrigger>
+              <TabsTrigger 
+                value="visao-meta" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
+              >
+                Atingimento de Meta
+              </TabsTrigger>
+              <TabsTrigger 
+                value="campus" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
+              >
+                Por Campus
+              </TabsTrigger>
+              <TabsTrigger 
+                value="turmas" 
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
+              >
+                Por Turma
+              </TabsTrigger>
+              {!isProduction && (
+                <TabsTrigger 
+                  value="upload" 
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
+                >
+                  Upload
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
 
-          <TabsContent value="visao-geral">
+          <TabsContent value="visao-geral" className="mt-0">
             <VisaoGeral totais={displayData.totais} turmas={displayData.turmas} />
           </TabsContent>
 
-          <TabsContent value="visao-meta">
+          <TabsContent value="visao-meta" className="mt-0">
             <VisaoMeta totais={displayData.totais} campusData={displayData.campusData} />
           </TabsContent>
 
-          <TabsContent value="campus">
+          <TabsContent value="campus" className="mt-0">
             <CampusTable campusData={displayData.campusData} />
           </TabsContent>
 
-          <TabsContent value="turmas">
+          <TabsContent value="turmas" className="mt-0">
             <TurmasTable turmas={displayData.turmas} />
           </TabsContent>
 
           {!isProduction && (
-            <TabsContent value="upload">
+            <TabsContent value="upload" className="mt-0">
               <UploadForm lastSync={lastSync} onSyncComplete={handleSyncComplete} />
             </TabsContent>
           )}
         </Tabs>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t bg-white mt-8 py-4">
+        <div className="container mx-auto px-4 md:px-6">
+          <p className="text-center text-sm text-gray-500">
+            Dashboard de Desempenho das Turmas Estácio • Período 2026.1
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
