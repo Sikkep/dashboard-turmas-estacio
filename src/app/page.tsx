@@ -168,9 +168,12 @@ export default function Dashboard() {
 
   // Client-side filtering for production
   const filteredData = useMemo(() => {
-    if (!data || !isProduction) return data;
+    if (!data) return null;
     
-    // If no filters, return original data with correct totals
+    // In development, return data as-is (server handles filtering)
+    if (!isProduction) return data;
+    
+    // In production with no filters, return original data with correct totals
     if (selectedCampus === "all" && selectedCurso === "all" && selectedTurno === "all") {
       return data;
     }
@@ -209,6 +212,12 @@ export default function Dashboard() {
       totais.matAcadAtual += t.matAcadAtual;
       totais.matAcadMeta += t.matAcadMeta;
     });
+
+    // Round totals
+    totais.inscritosMeta = Math.round(totais.inscritosMeta);
+    totais.matFinMeta = Math.round(totais.matFinMeta);
+    totais.finDocMeta = Math.round(totais.finDocMeta);
+    totais.matAcadMeta = Math.round(totais.matAcadMeta);
 
     totais.inscritosPercent = totais.inscritosMeta > 0 ? Math.round((totais.inscritosAtual / totais.inscritosMeta) * 100) : 0;
     totais.matFinPercent = totais.matFinMeta > 0 ? Math.round((totais.matFinAtual / totais.matFinMeta) * 100) : 0;

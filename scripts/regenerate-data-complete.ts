@@ -284,11 +284,11 @@ async function main() {
     const meta = metasAggregated.get(metaKey);
     const numTurnos = turnosPorCurso.get(metaKey) || 1;
     
-    // Divide meta proportionally among turnos (rounded)
-    const inscritosMeta = meta ? Math.round(meta.inscritosMeta / numTurnos) : 0;
-    const matFinMeta = meta ? Math.round(meta.matFinMeta / numTurnos) : 0;
-    const finDocMeta = meta ? Math.round(meta.finDocMeta / numTurnos) : 0;
-    const matAcadMeta = meta ? Math.round(meta.matAcadMeta / numTurnos) : 0;
+    // Divide meta proportionally among turnos (keep decimals for accurate sum)
+    const inscritosMeta = meta ? meta.inscritosMeta / numTurnos : 0;
+    const matFinMeta = meta ? meta.matFinMeta / numTurnos : 0;
+    const finDocMeta = meta ? meta.finDocMeta / numTurnos : 0;
+    const matAcadMeta = meta ? meta.matAcadMeta / numTurnos : 0;
     
     const turmaMatch = portfolioMap.get(key);
     
@@ -377,16 +377,16 @@ async function main() {
         nomeMunicipio: turma.nomeMunicipio,
         temDados: false,
         inscritosAtual: 0,
-        inscritosMeta: meta ? Math.round(meta.inscritosMeta / numTurnos) : 0,
+        inscritosMeta: meta ? meta.inscritosMeta / numTurnos : 0,
         inscritosPercent: 0,
         matFinAtual: 0,
-        matFinMeta: meta ? Math.round(meta.matFinMeta / numTurnos) : 0,
+        matFinMeta: meta ? meta.matFinMeta / numTurnos : 0,
         matFinPercent: 0,
         finDocAtual: 0,
-        finDocMeta: meta ? Math.round(meta.finDocMeta / numTurnos) : 0,
+        finDocMeta: meta ? meta.finDocMeta / numTurnos : 0,
         finDocPercent: 0,
         matAcadAtual: 0,
-        matAcadMeta: meta ? Math.round(meta.matAcadMeta / numTurnos) : 0,
+        matAcadMeta: meta ? meta.matAcadMeta / numTurnos : 0,
         matAcadPercent: 0,
       });
       processedKeys.add(key);
