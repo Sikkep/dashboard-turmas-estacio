@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Turma {
+  id                  String   @id @default(cuid())
+  sku                 String   @unique
+  marca               String
+  codCampus           String
+  nomeCampus          String
+  codCurso            String
+  nomeCurso           String
+  codTurno            String
+  turno               String
+  tipoCurso           String?
+  areaConhecimento    String?
+  uf                  String?
+  nomeMunicipio       String?
+  dadosCAP            DadosCAP?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([codCampus])
+  @@index([codCurso])
+  @@index([codTurno])
+}
+
+model DadosCAP {
+  id                  String   @id @default(cuid())
+  turmaId             String   @unique
+  turma               Turma    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  periodoAcademico    String
+  inscritosAtual      Float    @default(0)
+  inscritosMeta       Float    @default(0)
+  matFinAtual         Float    @default(0)
+  matFinMeta          Float    @default(0)
+  finDocAtual         Float    @default(0)
+  finDocMeta          Float    @default(0)
+  matAcadAtual        Float    @default(0)
+  matAcadMeta         Float    @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Configuracao {
+  id                  String   @id @default(cuid())
+  chave               String   @unique
+  valor               String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
