@@ -318,6 +318,15 @@ export default function Dashboard() {
         </div>
       </header>
 
+      {/* Aviso sobre desistentes */}
+      <div className="bg-amber-50 border-b border-amber-200">
+        <div className="container mx-auto px-4 py-2 md:px-6">
+          <p className="text-sm text-amber-800 text-center">
+            ⚠️ Essa visualização desconsidera os candidatos com status de desistente
+          </p>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="container mx-auto p-4 md:p-6 space-y-6">
         {/* Filter Bar */}
@@ -357,7 +366,7 @@ export default function Dashboard() {
                 value="gap-enturmacao"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md px-6 rounded-xl transition-all"
               >
-                Gap de Enturmação
+                Matrículas Pendentes
               </TabsTrigger>
               {!isProduction && (
                 <TabsTrigger

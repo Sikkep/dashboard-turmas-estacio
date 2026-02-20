@@ -42,11 +42,11 @@ function formatNumber(num: number): string {
 export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
   const [search, setSearch] = useState("");
 
-  // Get turmas com gap de enturmação (confirmadas mas mat_acad < fin_doc)
+  // Get turmas com matrículas pendentes (confirmadas e a confirmar com mat_acad < fin_doc)
   const turmasComGap = useMemo(() => {
     return turmas
       .filter((turma) => {
-        if (!turma.temDados || !turma.confirmado) return false;
+        if (!turma.temDados) return false;
         return turma.matAcadAtual < turma.finDocAtual;
       })
       .map((turma) => ({
@@ -79,8 +79,9 @@ export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">Gap de Enturmação</h2>
-          <p className="text-sm text-gray-500">Turmas confirmadas com <strong>MAT ACAD</strong> menor que <strong>FIN DOC</strong></p>
+          <h2 className="text-xl font-bold text-gray-800">Matrículas Pendentes</h2>
+          <p className="text-sm text-gray-500">Turmas com <strong>MAT ACAD</strong> menor que <strong>FIN DOC</strong></p>
+          <p className="text-xs text-gray-400 mt-1">⚠️ Considera cursos no status de <strong>Confirmado</strong> e <strong>A Confirmar</strong></p>
         </div>
       </div>
 
@@ -126,7 +127,7 @@ export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Lista Completa</h3>
                 <p className="text-xs text-gray-500">
-                  {turmasComGap.length} turmas com gap de enturmação • ordenado por maior gap
+                  {turmasComGap.length} turmas com matrículas pendentes • ordenado por maior gap
                 </p>
               </div>
             </div>
@@ -144,9 +145,9 @@ export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
           {filteredTurmas.length === 0 ? (
             <div className="text-center py-12">
               <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Nenhuma turma com gap de enturmação</p>
+              <p className="text-gray-500">Nenhuma turma com matrículas pendentes</p>
               <p className="text-sm text-gray-400 mt-1">
-                Todas as turmas confirmadas têm MAT ACAD ≥ FIN DOC
+                Todas as turmas têm MAT ACAD ≥ FIN DOC
               </p>
             </div>
           ) : (
