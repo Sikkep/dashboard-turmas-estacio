@@ -42,11 +42,13 @@ function formatNumber(num: number): string {
 export default function GapEnturmacao({ turmas }: GapEnturmacaoProps) {
   const [search, setSearch] = useState("");
 
-  // Get turmas com matrículas pendentes (confirmadas com mat_acad < fin_doc)
+  // Get turmas com matrículas pendentes (atingiram PE com mat_acad < fin_doc)
   const turmasComGap = useMemo(() => {
     return turmas
       .filter((turma) => {
-        if (!turma.temDados || !turma.confirmado) return false;
+        if (!turma.temDados) return false;
+        if (turma.pe <= 0) return false; // Precisa ter PE definido
+        if (turma.finDocAtual < turma.pe) return false; // Precisa ter atingido o PE
         return turma.matAcadAtual < turma.finDocAtual;
       })
       .map((turma) => ({
