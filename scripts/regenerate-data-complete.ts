@@ -286,8 +286,8 @@ async function main() {
     portfolioMap.set(key, t);
   });
   
-  console.log('\nLendo CAP 1902.csv...');
-  const capResult = readCAPCSV('/home/z/my-project/upload/cap 1902.csv');
+  console.log('\nLendo CAP_2002.csv...');
+  const capResult = readCAPCSV('/home/z/my-project/upload/CAP_2002.csv');
   console.log('Dados atuais:', capResult.dadosAtuais.length);
   console.log('Metas:', capResult.metas.length);
   
